@@ -3,7 +3,7 @@ session_start();
 
 // Vérifier si l'utilisateur est connecté et est un administrateur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: /cours_en_ligne/auth/login.php");
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
     exit();
 }
 ?>
@@ -54,7 +54,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             <nav class="space-y-6">
                 <a href="dashboord.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
                     <i class="fas fa-th-large text-lg"></i>
-                    <span class="font-medium">Dashboard</span>
+                    <span class="font-medium">Tableau de Bord</span>
                 </a>
                 <a href="utilisateur.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-users text-lg"></i>

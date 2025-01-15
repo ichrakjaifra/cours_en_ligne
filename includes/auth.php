@@ -45,11 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'login') {
       ];
 
       // Rediriger vers le tableau de bord approprié
-      header("Location: /cours_en_ligne/pages/{$_SESSION['user']['role']}/dashboard2.php");
+      header("Location: /cours_en_ligne/cours_en_ligne/pages/{$_SESSION['user']['role']}/dashboard2.php");
       exit();
   } catch (Exception $e) {
       $_SESSION['error'] = $e->getMessage();
-      header("Location: /cours_en_ligne/auth/login.php");
+      header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
       exit();
   }
 }
@@ -89,11 +89,11 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
       }
 
       // Rediriger vers la page de connexion
-      header("Location: /cours_en_ligne/auth/login.php");
+      header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
       exit();
   } catch (Exception $e) {
       $_SESSION['error'] = $e->getMessage();
-      header("Location: /cours_en_ligne/auth/register.php");
+      header("Location: /cours_en_ligne/cours_en_ligne/auth/register.php");
       exit();
   }
 }
@@ -103,13 +103,13 @@ elseif ($action === 'logout') {
     // Détruire la session
     session_destroy();
     // Rediriger vers la page de connexion
-    header("Location: /cours_en_ligne/auth/login.php");
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
     exit();
 }
 
 // Redirection par défaut si aucune action n'est spécifiée
 else {
-    header("Location: /cours_en_ligne/auth/login.php");
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
     exit();
 }
 ?>

@@ -6,7 +6,7 @@ require_once '../../classes/Administrateur.php';
 
 // Vérifier si l'utilisateur est un administrateur
 // if (!isset($_SESSION['user']) || !$_SESSION['user']->isAdmin()) {
-//     header("Location: /cours_en_ligne/auth/login.php");
+//     header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
 //     exit();
 // }
 

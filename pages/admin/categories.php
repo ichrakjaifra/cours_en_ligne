@@ -78,16 +78,49 @@ $categories = Categorie::getAllCategorie();
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Cours</span>
                 </a>
-                <a href="categories.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
-                    <i class="fas fa-tags text-lg"></i>
-                    <span class="font-medium">Catégories</span>
-                </a>
+                <div class="relative">
+                    <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl" id="toggleCategories">
+                        <i class="fas fa-tags text-lg"></i>
+                        <span class="font-medium">Catégories</span>
+                    </a>
+
+                    <ul class="absolute left-0 w-full bg-white bg-opacity-10 rounded-xl mt-2 hidden" id="categoriesDropdown">
+                        <li>
+                            <a href="categories.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                                <i class="fas fa-tags text-lg"></i>
+                                <span class="font-medium">Catégories</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="tags.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                                <i class="fas fa-hashtag text-lg"></i>
+                                <span class="font-medium">Tags</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
                     <span class="font-medium">Settings</span>
                 </a>
             </nav>
         </aside>
+
+        <script>
+            const toggleButton = document.getElementById('toggleCategories');
+            const dropdownMenu = document.getElementById('categoriesDropdown');
+
+            toggleButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', function(e) {
+                if (!e.target.closest('.relative')) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        </script>
 
         <!-- Main Content -->
         <main class="flex-1 ml-72 p-8">

@@ -16,7 +16,7 @@ include '../includes/header.php'; ?>
             </div>
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
-        <form action="/cours_en_ligne/includes/auth.php?action=register" method="POST">
+        <form action="/cours_en_ligne/cours_en_ligne/includes/auth.php?action=register" method="POST">
             <div class="mb-4">
                 <label for="nom" class="block text-gray-700">Nom</label>
                 <input type="text" name="nom" id="nom" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
