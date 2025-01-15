@@ -2,12 +2,11 @@
 session_start();
 
 // Vérifier si l'utilisateur est connecté et est un enseignant
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !$_SESSION['user']['est_valide']) {
-  header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
-  exit();
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant') {
+    header("Location: /cours_en_ligne/auth/login.php");
+    exit();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,93 +111,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
-                    <div class="flex items-center">
-                        <div class="bg-blue-100 p-4 rounded-xl">
-                            <i class="fas fa-users text-blue-600 text-2xl"></i>
-                        </div>
-                        <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Étudiants Inscrits</h3>
-                            <p class="text-3xl font-bold text-slate-800">1,250</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>8%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
-                    <div class="flex items-center">
-                        <div class="bg-emerald-100 p-4 rounded-xl">
-                            <i class="fas fa-book text-emerald-600 text-2xl"></i>
-                        </div>
-                        <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Cours Actifs</h3>
-                            <p class="text-3xl font-bold text-slate-800">42</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>15%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
-                    <div class="flex items-center">
-                        <div class="bg-violet-100 p-4 rounded-xl">
-                            <i class="fas fa-tags text-violet-600 text-2xl"></i>
-                        </div>
-                        <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Catégories</h3>
-                            <p class="text-3xl font-bold text-slate-800">12</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-plus mr-1"></i>2 new
-                                </span>
-                                <span class="text-slate-400 ml-2">this week</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Liste des Étudiants Inscrits -->
-            <div class="bg-white rounded-2xl shadow-sm">
-                <div class="p-8 border-b border-slate-100">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800">Étudiants Inscrits</h2>
-                    </div>
-                </div>
-                <div class="overflow-x-auto p-4">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left">
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nom</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Cours</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Date d'Inscription</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition-all duration-300">
-                                <td class="px-6 py-4">John Doe</td>
-                                <td class="px-6 py-4">john@example.com</td>
-                                <td class="px-6 py-4">Introduction à la Programmation</td>
-                                <td class="px-6 py-4">2023-10-25</td>
-                            </tr>
-                            <!-- Plus de lignes... -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
+            </main>
     </div>
 </body>
 </html>
