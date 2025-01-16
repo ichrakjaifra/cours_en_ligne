@@ -5,7 +5,7 @@ abstract class Cours {
     protected $id_course;
     protected $titre;
     protected $description;
-    protected $image; // Nouvelle propriété pour l'image
+    protected $image; 
     protected $contenu;
     protected $categorie_id;
     protected $enseignant_id;
@@ -14,7 +14,7 @@ abstract class Cours {
     public function __construct($titre, $description, $image, $contenu, $categorie_id, $enseignant_id) {
         $this->titre = $titre;
         $this->description = $description;
-        $this->image = $image; // Initialisation de l'image
+        $this->image = $image; 
         $this->contenu = $contenu;
         $this->categorie_id = $categorie_id;
         $this->enseignant_id = $enseignant_id;
