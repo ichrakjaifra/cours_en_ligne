@@ -86,15 +86,75 @@ abstract class Cours {
     }
 
     // Méthode pour récupérer tous les cours
-    public static function getAllCours() {
-        $db = Database::getInstance()->getConnection();
-        try {
-            $stmt = $db->query("SELECT * FROM courses");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Erreur lors de la récupération des cours : " . $e->getMessage());
-            throw new Exception("Erreur lors de la récupération des cours.");
+  public static function getAllCours() {
+    $db = Database::getInstance()->getConnection();
+    try {
+        $stmt = $db->query("SELECT * FROM courses");
+        $courses = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Créer un objet Cours en fonction du type
+            if ($row['type'] === 'video') {
+                $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+            } else {
+                $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+            }
+            // Définir l'ID du cours
+            $course->id_course = $row['id_course'];
+            $courses[] = $course;
         }
+        return $courses;
+    } catch (PDOException $e) {
+        error_log("Erreur lors de la récupération des cours : " . $e->getMessage());
+        throw new Exception("Erreur lors de la récupération des cours.");
     }
+}
+
+    // Méthode pour ajouter un tag à un cours
+    public function addTag($course_id, $tag_id) {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("INSERT INTO course_tags (course_id, tag_id) VALUES (:course_id, :tag_id)");
+          $stmt->execute([
+              ':course_id' => $course_id,
+              ':tag_id' => $tag_id
+          ]);
+      } catch (PDOException $e) {
+          error_log("Erreur lors de l'ajout du tag : " . $e->getMessage());
+          throw new Exception("Erreur lors de l'ajout du tag.");
+      }
+  }
+
+  // Méthode pour mettre à jour les tags d'un cours
+  public function updateTags($course_id, $selected_tags) {
+      $db = Database::getInstance()->getConnection();
+      try {
+          // Supprimer les tags existants pour ce cours
+          $stmt = $db->prepare("DELETE FROM course_tags WHERE course_id = :course_id");
+          $stmt->execute([':course_id' => $course_id]);
+
+          // Ajouter les nouveaux tags sélectionnés
+          foreach ($selected_tags as $tag_id) {
+              $this->addTag($course_id, $tag_id);
+          }
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la mise à jour des tags : " . $e->getMessage());
+          throw new Exception("Erreur lors de la mise à jour des tags.");
+      }
+  }
+
+  // Méthode pour récupérer les tags d'un cours
+  public function getTags($course_id) {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("SELECT tag_id FROM course_tags WHERE course_id = :course_id");
+          $stmt->execute([':course_id' => $course_id]);
+          return $stmt->fetchAll(PDO::FETCH_COLUMN);
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération des tags : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération des tags.");
+      }
+  }
+
+  
 }
 ?>
