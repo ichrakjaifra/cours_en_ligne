@@ -1,5 +1,5 @@
 <?php
-require_once 'Database.php'; // Assurez-vous d'inclure votre classe Database
+require_once 'Database.php'; 
 
 class Tag {
     private $id_tag;
