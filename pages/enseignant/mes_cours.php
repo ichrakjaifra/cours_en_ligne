@@ -1,9 +1,5 @@
 <?php
 session_start();
-// echo "<pre>";
-// print_r($_SESSION);
-
-
 
 // Vérifier si l'utilisateur est connecté et est un enseignant
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant') {
@@ -17,6 +13,7 @@ require_once '../../classes/CoursDocument.php';
 require_once '../../classes/Utilisateur.php';
 require_once '../../classes/Tag.php';
 require_once '../../classes/Categorie.php';
+
 // Récupérer tous les tags et catégories pour les sélecteurs
 $tags = Tag::getAllTags();
 $categories = Categorie::getAllCategorie();
@@ -27,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add_course'])) {
         $titre = $_POST['titre'];
         $description = $_POST['description'];
-        $contenu = $_POST['contenu'];
         $categorie_id = $_POST['categorie_id'];
         $selected_tags = $_POST['tags'] ?? [];
         $type = $_POST['type']; // 'video' ou 'document'
@@ -42,22 +38,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             move_uploaded_file($_FILES['image']['tmp_name'], $image_path);
         }
 
+        // Gérer les champs spécifiques en fonction du type de cours
+        if ($type === 'video') {
+            // Upload du fichier vidéo
+            if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] == 0) {
+                $upload_dir = '../../uploads/';
+                $video_name = basename($_FILES['video_file']['name']);
+                $video_path = $upload_dir . $video_name;
+                move_uploaded_file($_FILES['video_file']['tmp_name'], $video_path);
+                $contenu = $video_path; // Stocker le chemin du fichier vidéo dans le contenu
+            } else {
+                $contenu = ''; // Si aucun fichier n'est téléversé
+            }
+        } elseif ($type === 'document') {
+            // Récupérer le texte du document
+            $contenu = $_POST['document_text']; // Stocker le texte dans le contenu
+        }
+
         // Créer le cours en fonction du type
-if ($type === 'video') {
-  $cours = new CoursVideo($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
-} else {
-  $cours = new CoursDocument($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
-}
+        if ($type === 'video') {
+            $cours = new CoursVideo($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
+        } else {
+            $cours = new CoursDocument($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
+        }
 
+        // Ajouter le cours et récupérer l'ID du cours ajouté
+        $cours_id = $cours->ajouterCours();
 
-
-// Ajouter le cours et récupérer l'ID du cours ajouté
-$cours_id = $cours->ajouterCours();
-
-// Ajouter les tags au cours
-foreach ($selected_tags as $tag_id) {
-  $cours->addTag($cours_id, $tag_id); // Utiliser $cours_id au lieu de $cours
-}
+        // Ajouter les tags au cours
+        foreach ($selected_tags as $tag_id) {
+            $cours->addTag($cours_id, $tag_id);
+        }
 
         // Rediriger ou afficher un message de succès
         header("Location: mes_cours.php");
@@ -69,7 +80,6 @@ foreach ($selected_tags as $tag_id) {
         $course_id = $_POST['course_id'];
         $titre = $_POST['titre'];
         $description = $_POST['description'];
-        $contenu = $_POST['contenu'];
         $categorie_id = $_POST['categorie_id'];
         $selected_tags = $_POST['tags'] ?? [];
 
@@ -106,9 +116,8 @@ foreach ($selected_tags as $tag_id) {
 }
 
 // Récupérer tous les cours pour affichage
-// $cours = Cours::getAllCours();
 $enseignant_id = $_SESSION['user']['id'];
-$cours = Cours::getAllCour($enseignant_id);
+$cours = Cours::getAllCours($enseignant_id);
 ?>
 
 <!DOCTYPE html>
@@ -216,10 +225,6 @@ $cours = Cours::getAllCour($enseignant_id);
                         <textarea id="description" name="description" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
                     </div>
                     <div class="mb-4">
-                        <label for="contenu" class="block text-sm font-semibold text-slate-600">Contenu</label>
-                        <textarea id="contenu" name="contenu" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
-                    </div>
-                    <div class="mb-4">
                         <label for="image" class="block text-sm font-semibold text-slate-600">Image</label>
                         <input type="file" id="image" name="image" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg">
                     </div>
@@ -244,11 +249,24 @@ $cours = Cours::getAllCour($enseignant_id);
                     </div>
                     <div class="mb-4">
                         <label for="type" class="block text-sm font-semibold text-slate-600">Type de cours</label>
-                        <select id="type" name="type" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
+                        <select id="type" name="type" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required onchange="toggleFields()">
                             <option value="video">Vidéo</option>
                             <option value="document">Document</option>
                         </select>
                     </div>
+
+                    <!-- Champ spécifique pour la vidéo -->
+                    <div id="videoFields" class="mb-4">
+                        <label for="video_file" class="block text-sm font-semibold text-slate-600">Fichier vidéo</label>
+                        <input type="file" id="video_file" name="video_file" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" accept="video/*">
+                    </div>
+
+                    <!-- Champ spécifique pour le document -->
+                    <div id="documentFields" class="mb-4 hidden">
+                        <label for="document_text" class="block text-sm font-semibold text-slate-600">Contenu du document</label>
+                        <textarea id="document_text" name="document_text" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" placeholder="Entrez le contenu du document ici..."></textarea>
+                    </div>
+
                     <div class="flex justify-end">
                         <button type="submit" name="add_course" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Ajouter</button>
                     </div>
@@ -367,6 +385,24 @@ $cours = Cours::getAllCour($enseignant_id);
     </div>
 
     <script>
+        // Fonction pour afficher ou masquer les champs spécifiques
+        function toggleFields() {
+            const type = document.getElementById('type').value;
+            const videoFields = document.getElementById('videoFields');
+            const documentFields = document.getElementById('documentFields');
+
+            if (type === 'video') {
+                videoFields.style.display = 'block';
+                documentFields.style.display = 'none';
+            } else if (type === 'document') {
+                videoFields.style.display = 'none';
+                documentFields.style.display = 'block';
+            }
+        }
+
+        // Appeler la fonction au chargement de la page pour afficher les champs corrects
+        document.addEventListener('DOMContentLoaded', toggleFields);
+
         // Fonction pour afficher le modal de modification
         function editCourse(courseId) {
             // Récupérer les données du cours via une requête AJAX ou les pré-remplir directement
