@@ -78,7 +78,8 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
       $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
       // Créer un nouvel utilisateur
-      $user = new Utilisateur($nom, $prenom, $email, $passwordHash, $role_id, 'active', $est_valide);
+      $user = new Utilisateur($id,$nom, $prenom, $email, $passwordHash, $role_id, 'active', $est_valide);
+    
       $user->save();
 
       // Message de succès selon le rôle

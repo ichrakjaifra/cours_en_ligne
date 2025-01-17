@@ -9,6 +9,7 @@ class CoursVideo extends Cours {
 
     // Implémentation de la méthode abstraite ajouterCours
     public function ajouterCours() {
+      error_log("Enseignant ID: " . $this->enseignant_id);
       $db = Database::getInstance()->getConnection();
       try {
           $stmt = $db->prepare("INSERT INTO courses (titre, description, image, contenu, type, categorie_id, enseignant_id) VALUES (:titre, :description, :image, :contenu, 'video', :categorie_id, :enseignant_id)");

@@ -1,5 +1,9 @@
 <?php
 session_start();
+// echo "<pre>";
+// print_r($_SESSION);
+
+
 
 // Vérifier si l'utilisateur est connecté et est un enseignant
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant') {
@@ -10,9 +14,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant') {
 require_once '../../classes/Cours.php';
 require_once '../../classes/CoursVideo.php';
 require_once '../../classes/CoursDocument.php';
+require_once '../../classes/Utilisateur.php';
 require_once '../../classes/Tag.php';
 require_once '../../classes/Categorie.php';
-
 // Récupérer tous les tags et catégories pour les sélecteurs
 $tags = Tag::getAllTags();
 $categories = Categorie::getAllCategorie();
@@ -27,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $categorie_id = $_POST['categorie_id'];
         $selected_tags = $_POST['tags'] ?? [];
         $type = $_POST['type']; // 'video' ou 'document'
+        $enseignant_id = $_SESSION['user']['id'];
 
         // Upload de l'image
         $image_path = '';
@@ -39,10 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Créer le cours en fonction du type
 if ($type === 'video') {
-  $cours = new CoursVideo($titre, $description, $image_path, $contenu, $categorie_id, $_SESSION['user']['id']);
+  $cours = new CoursVideo($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
 } else {
-  $cours = new CoursDocument($titre, $description, $image_path, $contenu, $categorie_id, $_SESSION['user']['id']);
+  $cours = new CoursDocument($titre, $description, $image_path, $contenu, $categorie_id, $enseignant_id);
 }
+
+
 
 // Ajouter le cours et récupérer l'ID du cours ajouté
 $cours_id = $cours->ajouterCours();
@@ -99,7 +106,9 @@ foreach ($selected_tags as $tag_id) {
 }
 
 // Récupérer tous les cours pour affichage
-$cours = Cours::getAllCours();
+// $cours = Cours::getAllCours();
+$enseignant_id = $_SESSION['user']['id'];
+$cours = Cours::getAllCour($enseignant_id);
 ?>
 
 <!DOCTYPE html>

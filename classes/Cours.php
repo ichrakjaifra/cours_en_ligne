@@ -92,13 +92,11 @@ abstract class Cours {
         $stmt = $db->query("SELECT * FROM courses");
         $courses = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // Créer un objet Cours en fonction du type
             if ($row['type'] === 'video') {
                 $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
             } else {
                 $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
             }
-            // Définir l'ID du cours
             $course->id_course = $row['id_course'];
             $courses[] = $course;
         }
@@ -107,6 +105,42 @@ abstract class Cours {
         error_log("Erreur lors de la récupération des cours : " . $e->getMessage());
         throw new Exception("Erreur lors de la récupération des cours.");
     }
+}
+
+public static function getAllCour($enseignant_id = null) {
+  $db = Database::getInstance()->getConnection();
+  try {
+      // Construire la requête SQL en fonction de la présence de l'ID de l'enseignant
+      $sql = "SELECT * FROM courses";
+      if ($enseignant_id !== null) {
+          $sql .= " WHERE enseignant_id = :enseignant_id";
+      }
+
+      $stmt = $db->prepare($sql);
+
+      // Ajouter le paramètre enseignant_id si nécessaire
+      if ($enseignant_id !== null) {
+          $stmt->bindParam(':enseignant_id', $enseignant_id, PDO::PARAM_INT);
+      }
+
+      $stmt->execute();
+      $courses = [];
+      while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          // Créer un objet Cours en fonction du type
+          if ($row['type'] === 'video') {
+              $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          } else {
+              $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          }
+          // Définir l'ID du cours
+          $course->id_course = $row['id_course'];
+          $courses[] = $course;
+      }
+      return $courses;
+  } catch (PDOException $e) {
+      error_log("Erreur lors de la récupération des cours : " . $e->getMessage());
+      throw new Exception("Erreur lors de la récupération des cours.");
+  }
 }
 
     // Méthode pour ajouter un tag à un cours

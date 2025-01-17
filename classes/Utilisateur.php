@@ -1,6 +1,6 @@
 <?php
 class Utilisateur {
-    private $id;
+    private $id ;
     private $nom;
     private $prenom;
     private $email;
@@ -10,7 +10,8 @@ class Utilisateur {
     private $est_valide;
 
     // Constructeur
-    public function __construct($nom, $prenom, $email, $password, $role_id, $statut = 'active', $est_valide = false) {
+    public function __construct($id,$nom, $prenom, $email, $password, $role_id, $statut = 'active', $est_valide = false) {
+        $this->id = $id;
         $this->nom = $nom;
         $this->prenom = $prenom;
         $this->email = $email;
@@ -25,7 +26,7 @@ class Utilisateur {
     public function getNom() { return $this->nom; }
     public function getPrenom() { return $this->prenom; }
     public function getEmail() { return $this->email; }
-    public function getPassword() { return $this->password; } // Getter pour le mot de passe
+    public function getPassword() { return $this->password; } 
     public function getRoleId() { return $this->role_id; }
     public function getStatut() { return $this->statut; }
     public function estValide() { return $this->est_valide; }
@@ -53,6 +54,7 @@ class Utilisateur {
 
         if ($result) {
             return new Utilisateur(
+                $result['id_utilisateur'],
                 $result['nom'],
                 $result['prenom'],
                 $result['email'],
