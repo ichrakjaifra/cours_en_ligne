@@ -77,32 +77,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Modifier un cours
     if (isset($_POST['update_course'])) {
-        $course_id = $_POST['course_id'];
-        $titre = $_POST['titre'];
-        $description = $_POST['description'];
-        $categorie_id = $_POST['categorie_id'];
-        $selected_tags = $_POST['tags'] ?? [];
+      $course_id = $_POST['course_id'];
+      $titre = $_POST['titre'];
+      $description = $_POST['description'];
+      $categorie_id = $_POST['categorie_id'];
+      $selected_tags = $_POST['tags'] ?? [];
 
-        // Upload de l'image (si une nouvelle image est fournie)
-        $image_path = $_POST['existing_image'];
-        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $upload_dir = '../../uploads/';
-            $image_name = basename($_FILES['image']['name']);
-            $image_path = $upload_dir . $image_name;
-            move_uploaded_file($_FILES['image']['tmp_name'], $image_path);
-        }
+      // Upload de l'image (si une nouvelle image est fournie)
+      $image_path = $_POST['existing_image'];
+      if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+          $upload_dir = '../../uploads/';
+          $image_name = basename($_FILES['image']['name']);
+          $image_path = $upload_dir . $image_name;
+          move_uploaded_file($_FILES['image']['tmp_name'], $image_path);
+      }
 
-        // Mettre à jour le cours
-        $cours = new Cours($titre, $description, $image_path, $contenu, $categorie_id, $_SESSION['user']['id']);
-        $cours->modifierCours($course_id);
+      // Récupérer le type et le contenu du cours depuis la base de données
+      $db = Database::getInstance()->getConnection();
+      $stmt = $db->prepare("SELECT type, contenu FROM courses WHERE id_course = :id_course");
+      $stmt->execute([':id_course' => $course_id]);
+      $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Mettre à jour les tags du cours
-        $cours->updateTags($course_id, $selected_tags);
+      if ($row) {
+          $type = $row['type'];
+          $contenu = $row['contenu'] ?? ''; // Utilisation de l'opérateur null coalescent pour une valeur par défaut
+      } else {
+          throw new Exception("Cours non trouvé.");
+      }
 
-        // Rediriger ou afficher un message de succès
-        header("Location: mes_cours.php");
-        exit();
-    }
+      // Si le cours est de type "video" et qu'un nouveau fichier vidéo est téléversé
+      if ($type === 'video' && isset($_FILES['video_file']) && $_FILES['video_file']['error'] == 0) {
+          $upload_dir = '../../uploads/';
+          $video_name = basename($_FILES['video_file']['name']);
+          $video_path = $upload_dir . $video_name;
+          move_uploaded_file($_FILES['video_file']['tmp_name'], $video_path);
+          $contenu = $video_path; // Mettre à jour le contenu avec le nouveau fichier vidéo
+      }
+
+      // Si le cours est de type "document" et qu'un nouveau texte est fourni
+      if ($type === 'document' && isset($_POST['document_text'])) {
+          $contenu = $_POST['document_text']; // Mettre à jour le contenu avec le nouveau texte
+      }
+
+      // Instancier la classe appropriée en fonction du type
+      if ($type === 'video') {
+          $cours = new CoursVideo($titre, $description, $image_path, $contenu, $categorie_id, $_SESSION['user']['id']);
+      } else {
+          $cours = new CoursDocument($titre, $description, $image_path, $contenu, $categorie_id, $_SESSION['user']['id']);
+      }
+
+      // Mettre à jour le cours
+      $cours->modifierCours($course_id);
+
+      // Mettre à jour les tags du cours
+      $cours->updateTags($course_id, $selected_tags);
+
+      // Rediriger ou afficher un message de succès
+      header("Location: mes_cours.php");
+      exit();
+  }
+
 
     // Supprimer un cours
     if (isset($_POST['delete_course'])) {
@@ -145,6 +179,12 @@ $cours = Cours::getAllCours($enseignant_id);
             border-radius: 20px;
             font-size: 0.875rem;
             font-weight: 500;
+        }
+
+        .modal-content {
+            max-height: 80vh; /* Limite la hauteur de la modal à 80% de la hauteur de la vue */
+            overflow-y: auto; /* Ajoute un défilement vertical si le contenu dépasse la hauteur maximale */
+            padding-right: 16px; /* Ajoute un peu d'espace pour éviter que le contenu ne chevauche la barre de défilement */
         }
     </style>
 </head>
@@ -212,69 +252,15 @@ $cours = Cours::getAllCours($enseignant_id);
                 </div>
             </div>
 
-            <!-- Formulaire d'ajout de cours -->
-            <div class="bg-white rounded-2xl shadow-sm p-8">
-                <h2 class="text-xl font-bold text-slate-800 mb-6">Ajouter un Cours</h2>
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="mb-4">
-                        <label for="titre" class="block text-sm font-semibold text-slate-600">Titre</label>
-                        <input type="text" id="titre" name="titre" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="description" class="block text-sm font-semibold text-slate-600">Description</label>
-                        <textarea id="description" name="description" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label for="image" class="block text-sm font-semibold text-slate-600">Image</label>
-                        <input type="file" id="image" name="image" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg">
-                    </div>
-                    <div class="mb-4">
-                        <label for="categorie_id" class="block text-sm font-semibold text-slate-600">Catégorie</label>
-                        <select id="categorie_id" name="categorie_id" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
-                            <?php foreach ($categories as $categorie) : ?>
-                                <option value="<?php echo $categorie->getIdCategorie(); ?>"><?php echo $categorie->getNom(); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-slate-600">Tags</label>
-                        <div class="mt-2">
-                            <?php foreach ($tags as $tag) : ?>
-                                <label class="inline-flex items-center mr-4">
-                                    <input type="checkbox" name="tags[]" value="<?php echo $tag->getIdTag(); ?>" class="form-checkbox">
-                                    <span class="ml-2"><?php echo $tag->getNom(); ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="type" class="block text-sm font-semibold text-slate-600">Type de cours</label>
-                        <select id="type" name="type" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required onchange="toggleFields()">
-                            <option value="video">Vidéo</option>
-                            <option value="document">Document</option>
-                        </select>
-                    </div>
-
-                    <!-- Champ spécifique pour la vidéo -->
-                    <div id="videoFields" class="mb-4">
-                        <label for="video_file" class="block text-sm font-semibold text-slate-600">Fichier vidéo</label>
-                        <input type="file" id="video_file" name="video_file" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" accept="video/*">
-                    </div>
-
-                    <!-- Champ spécifique pour le document -->
-                    <div id="documentFields" class="mb-4 hidden">
-                        <label for="document_text" class="block text-sm font-semibold text-slate-600">Contenu du document</label>
-                        <textarea id="document_text" name="document_text" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" placeholder="Entrez le contenu du document ici..."></textarea>
-                    </div>
-
-                    <div class="flex justify-end">
-                        <button type="submit" name="add_course" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Ajouter</button>
-                    </div>
-                </form>
+            <!-- Bouton pour afficher le formulaire d'ajout de cours -->
+            <div class="mb-6">
+                <button onclick="openCourseModal('add')" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300">
+                    <i class="fas fa-plus mr-2"></i>Ajouter un Cours
+                </button>
             </div>
 
             <!-- Tableau des cours -->
-            <div class="bg-white rounded-2xl shadow-sm mt-8">
+            <div class="bg-white rounded-2xl shadow-sm">
                 <div class="p-8 border-b border-slate-100">
                     <h2 class="text-xl font-bold text-slate-800">Mes Cours</h2>
                 </div>
@@ -291,75 +277,71 @@ $cours = Cours::getAllCours($enseignant_id);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-    <?php foreach ($cours as $c) : ?>
-        <tr class="hover:bg-slate-50 transition-all duration-300">
-            <td class="px-6 py-4 text-slate-800 font-medium"><?php echo $c->getTitre(); ?></td>
-            <td class="px-6 py-4 text-slate-800"><?php echo $c->getDescription(); ?></td>
-            <td class="px-6 py-4">
-                <img src="<?php echo $c->getImage(); ?>" alt="Image du cours" class="w-16 h-16 object-cover rounded-lg">
-            </td>
-            <td class="px-6 py-4 text-slate-800"><?php echo $c->getCategorieId(); ?></td>
-            <td class="px-6 py-4 text-slate-800">
-    <?php
-    $course_tags = $c->getTags($c->getIdCourse());
-    echo implode(', ', array_map(function($tag_id) use ($tags) {
-        foreach ($tags as $tag) {
-            if ($tag->getIdTag() == $tag_id) {
-                return $tag->getNom();
-            }
-        }
-        return '';
-    }, $course_tags));
-    ?>
-</td>
-            <td class="px-6 py-4">
-                <div class="flex space-x-3">
-                    <button onclick="editCourse('<?php echo $c->getIdCourse(); ?>')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
-                        Modifier
-                    </button>
-                    <form method="POST">
-                        <input type="hidden" name="course_id" value="<?php echo $c->getIdCourse(); ?>">
-                        <button type="submit" name="delete_course" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                            Supprimer
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
+                            <?php foreach ($cours as $c) : ?>
+                                <tr class="hover:bg-slate-50 transition-all duration-300">
+                                    <td class="px-6 py-4 text-slate-800 font-medium"><?php echo $c->getTitre(); ?></td>
+                                    <td class="px-6 py-4 text-slate-800"><?php echo $c->getDescription(); ?></td>
+                                    <td class="px-6 py-4">
+                                        <img src="<?php echo $c->getImage(); ?>" alt="Image du cours" class="w-16 h-16 object-cover rounded-lg">
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-800"><?php echo $c->getCategorieId(); ?></td>
+                                    <td class="px-6 py-4 text-slate-800">
+                                        <?php
+                                        $course_tags = $c->getTags($c->getIdCourse());
+                                        echo implode(', ', array_map(function($tag_id) use ($tags) {
+                                            foreach ($tags as $tag) {
+                                                if ($tag->getIdTag() == $tag_id) {
+                                                    return $tag->getNom();
+                                                }
+                                            }
+                                            return '';
+                                        }, $course_tags));
+                                        ?>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex space-x-3">
+                                            <button onclick="openCourseModal('edit', '<?php echo $c->getIdCourse(); ?>')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                                                Modifier
+                                            </button>
+                                            <form method="POST">
+                                                <input type="hidden" name="course_id" value="<?php echo $c->getIdCourse(); ?>">
+                                                <button type="submit" name="delete_course" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal pour modifier un cours -->
-    <div id="editCourseModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-1/3">
-            <h3 class="text-xl font-bold text-slate-800 mb-4">Modifier un Cours</h3>
+    <!-- Modal pour ajouter ou modifier un cours -->
+    <div id="courseModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-1/3 modal-content">
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-4">Ajouter un Cours</h3>
             <form method="POST" enctype="multipart/form-data">
-                <input type="hidden" id="edit_course_id" name="course_id">
-                <input type="hidden" id="edit_existing_image" name="existing_image">
+                <input type="hidden" id="course_id" name="course_id">
+                <input type="hidden" id="existing_image" name="existing_image">
                 <div class="mb-4">
-                    <label for="edit_titre" class="block text-sm font-semibold text-slate-600">Titre</label>
-                    <input type="text" id="edit_titre" name="titre" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
+                    <label for="titre" class="block text-sm font-semibold text-slate-600">Titre</label>
+                    <input type="text" id="titre" name="titre" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
                 </div>
                 <div class="mb-4">
-                    <label for="edit_description" class="block text-sm font-semibold text-slate-600">Description</label>
-                    <textarea id="edit_description" name="description" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
+                    <label for="description" class="block text-sm font-semibold text-slate-600">Description</label>
+                    <textarea id="description" name="description" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
                 </div>
                 <div class="mb-4">
-                    <label for="edit_contenu" class="block text-sm font-semibold text-slate-600">Contenu</label>
-                    <textarea id="edit_contenu" name="contenu" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required></textarea>
+                    <label for="image" class="block text-sm font-semibold text-slate-600">Image</label>
+                    <input type="file" id="image" name="image" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg">
                 </div>
                 <div class="mb-4">
-                    <label for="edit_image" class="block text-sm font-semibold text-slate-600">Image</label>
-                    <input type="file" id="edit_image" name="image" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg">
-                </div>
-                <div class="mb-4">
-                    <label for="edit_categorie_id" class="block text-sm font-semibold text-slate-600">Catégorie</label>
-                    <select id="edit_categorie_id" name="categorie_id" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
+                    <label for="categorie_id" class="block text-sm font-semibold text-slate-600">Catégorie</label>
+                    <select id="categorie_id" name="categorie_id" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
                         <?php foreach ($categories as $categorie) : ?>
                             <option value="<?php echo $categorie->getIdCategorie(); ?>"><?php echo $categorie->getNom(); ?></option>
                         <?php endforeach; ?>
@@ -376,9 +358,29 @@ $cours = Cours::getAllCours($enseignant_id);
                         <?php endforeach; ?>
                     </div>
                 </div>
+                <div class="mb-4">
+                    <label for="type" class="block text-sm font-semibold text-slate-600">Type de cours</label>
+                    <select id="type" name="type" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required onchange="toggleFields()">
+                        <option value="video">Vidéo</option>
+                        <option value="document">Document</option>
+                    </select>
+                </div>
+
+                <!-- Champ spécifique pour la vidéo -->
+                <div id="videoFields" class="mb-4">
+                    <label for="video_file" class="block text-sm font-semibold text-slate-600">Fichier vidéo</label>
+                    <input type="file" id="video_file" name="video_file" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" accept="video/*">
+                </div>
+
+                <!-- Champ spécifique pour le document -->
+                <div id="documentFields" class="mb-4 hidden">
+                    <label for="document_text" class="block text-sm font-semibold text-slate-600">Contenu du document</label>
+                    <textarea id="document_text" name="document_text" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" placeholder="Entrez le contenu du document ici..."></textarea>
+                </div>
+
                 <div class="flex justify-end">
-                    <button type="submit" name="update_course" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Modifier</button>
-                    <button type="button" onclick="closeEditModal()" class="ml-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400">Annuler</button>
+                    <button type="submit" id="submitButton" name="add_course" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Ajouter</button>
+                    <button type="button" onclick="closeCourseModal()" class="ml-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400">Annuler</button>
                 </div>
             </form>
         </div>
@@ -403,30 +405,58 @@ $cours = Cours::getAllCours($enseignant_id);
         // Appeler la fonction au chargement de la page pour afficher les champs corrects
         document.addEventListener('DOMContentLoaded', toggleFields);
 
-        // Fonction pour afficher le modal de modification
-        function editCourse(courseId) {
-            // Récupérer les données du cours via une requête AJAX ou les pré-remplir directement
-            // Exemple simplifié :
-            fetch(`get_course.php?id=${courseId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('edit_course_id').value = data.id_course;
-                    document.getElementById('edit_titre').value = data.titre;
-                    document.getElementById('edit_description').value = data.description;
-                    document.getElementById('edit_contenu').value = data.contenu;
-                    document.getElementById('edit_existing_image').value = data.image;
-                    document.getElementById('edit_categorie_id').value = data.categorie_id;
-                    // Pré-remplir les tags sélectionnés
-                    data.tags.forEach(tagId => {
-                        document.querySelector(`input[name="tags[]"][value="${tagId}"]`).checked = true;
+        // Fonction pour ouvrir le modal
+        function openCourseModal(action, courseId = null) {
+            const modal = document.getElementById('courseModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitButton = document.getElementById('submitButton');
+
+            if (action === 'add') {
+                modalTitle.innerText = 'Ajouter un Cours';
+                submitButton.innerText = 'Ajouter';
+                submitButton.name = 'add_course';
+                // Réinitialiser le formulaire
+                document.getElementById('course_id').value = '';
+                document.getElementById('titre').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('existing_image').value = '';
+                document.getElementById('categorie_id').selectedIndex = 0;
+                document.querySelectorAll('input[name="tags[]"]').forEach(checkbox => checkbox.checked = false);
+                document.getElementById('type').selectedIndex = 0;
+                document.getElementById('video_file').value = '';
+                document.getElementById('document_text').value = '';
+                toggleFields(); // Afficher les champs corrects
+            } else if (action === 'edit' && courseId) {
+                modalTitle.innerText = 'Modifier un Cours';
+                submitButton.innerText = 'Modifier';
+                submitButton.name = 'update_course';
+
+                // Récupérer les données du cours via une requête AJAX ou les pré-remplir directement
+                fetch(`get_course.php?id=${courseId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('course_id').value = data.id_course;
+                        document.getElementById('titre').value = data.titre;
+                        document.getElementById('description').value = data.description;
+                        document.getElementById('existing_image').value = data.image;
+                        document.getElementById('categorie_id').value = data.categorie_id;
+                        // Pré-remplir les tags sélectionnés
+                        data.tags.forEach(tagId => {
+                            document.querySelector(`input[name="tags[]"][value="${tagId}"]`).checked = true;
+                        });
+                        document.getElementById('type').value = data.type;
+                        document.getElementById('video_file').value = '';
+                        document.getElementById('document_text').value = data.contenu;
+                        toggleFields(); // Afficher les champs corrects
                     });
-                    document.getElementById('editCourseModal').classList.remove('hidden');
-                });
+            }
+
+            modal.classList.remove('hidden');
         }
 
-        // Fonction pour fermer le modal de modification
-        function closeEditModal() {
-            document.getElementById('editCourseModal').classList.add('hidden');
+        // Fonction pour fermer le modal
+        function closeCourseModal() {
+            document.getElementById('courseModal').classList.add('hidden');
         }
     </script>
 </body>

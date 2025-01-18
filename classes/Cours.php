@@ -1,5 +1,7 @@
 <?php
 require_once 'Database.php';
+require_once 'CoursVideo.php'; // Inclure CoursVideo
+require_once 'CoursDocument.php'; // Inclure CoursDocument
 
 abstract class Cours {
     protected $id_course;
@@ -188,6 +190,87 @@ public static function getAllCour($enseignant_id = null) {
           throw new Exception("Erreur lors de la récupération des tags.");
       }
   }
+
+  public static function getCoursById($id_course) {
+    $db = Database::getInstance()->getConnection();
+    try {
+        $stmt = $db->prepare("SELECT * FROM courses WHERE id_course = :id_course");
+        $stmt->execute([':id_course' => $id_course]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            // Créer un objet Cours en fonction du type
+            if ($row['type'] === 'video') {
+                $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+            } else {
+                $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+            }
+            // Définir l'ID du cours
+            $course->id_course = $row['id_course'];
+            return $course;
+        } else {
+            return null; // Aucun cours trouvé
+        }
+    } catch (PDOException $e) {
+        error_log("Erreur lors de la récupération du cours : " . $e->getMessage());
+        throw new Exception("Erreur lors de la récupération du cours.");
+    }
+}
+
+public static function getCoursWithPagination($page = 1, $perPage = 6, $categorie_id = null) {
+  $db = Database::getInstance()->getConnection();
+  try {
+      $offset = ($page - 1) * $perPage;
+
+      $sql = "SELECT * FROM courses";
+      $countSql = "SELECT COUNT(*) as total FROM courses";
+
+      if ($categorie_id !== null) {
+          $sql .= " WHERE categorie_id = :categorie_id";
+          $countSql .= " WHERE categorie_id = :categorie_id";
+      }
+
+      $sql .= " LIMIT :limit OFFSET :offset";
+
+      $countStmt = $db->prepare($countSql);
+      if ($categorie_id !== null) {
+          $countStmt->bindParam(':categorie_id', $categorie_id, PDO::PARAM_INT);
+      }
+      $countStmt->execute();
+      $totalCourses = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+      $stmt = $db->prepare($sql);
+      if ($categorie_id !== null) {
+          $stmt->bindParam(':categorie_id', $categorie_id, PDO::PARAM_INT);
+      }
+      $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+      $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+      $stmt->execute();
+      
+      $courses = [];
+      while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          if ($row['type'] === 'video') {
+              $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          } else {
+              $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          }
+          $course->id_course = $row['id_course'];
+          $courses[] = $course;
+      }
+
+      $totalPages = ceil($totalCourses / $perPage);
+      
+      return [
+          'courses' => $courses,
+          'totalPages' => $totalPages,
+          'currentPage' => $page,
+          'totalCourses' => $totalCourses
+      ];
+  } catch (PDOException $e) {
+      error_log("Erreur lors de la récupération des cours : " . $e->getMessage());
+      throw new Exception("Erreur lors de la récupération des cours.");
+  }
+}
 
   
 }

@@ -87,5 +87,18 @@ class Tag {
             throw new Exception("Erreur lors de la récupération des tags.");
         }
     }
+
+    public static function getTagById($tagId) {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("SELECT * FROM tags WHERE id_tag = :id_tag");
+          $stmt->execute([':id_tag' => $tagId]);
+          $row = $stmt->fetch(PDO::FETCH_ASSOC);
+          return $row ? new Tag($row['id_tag'], $row['nom']) : null;
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération du tag : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération du tag.");
+      }
+  }
 }
 ?>
