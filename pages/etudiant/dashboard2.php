@@ -38,7 +38,32 @@ $currentPage = $result['currentPage'];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body class="bg-gray-50">
-    <?php include '../../includes/header.php'; ?>
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/index.php" class="text-2xl font-bold">Youdemy</a>
+
+            <!-- Liens principaux (centrés) -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/index.php" class="hover:text-gray-200">Accueil</a>
+                <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/dashboard2.php" class="hover:text-gray-200">Cours</a>
+                <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/categories.php" class="hover:text-gray-200">Catégories</a>
+                <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/enseignants.php" class="hover:text-gray-200">Enseignants</a>
+            </div>
+
+            <!-- Liens de connexion/déconnexion (à droite) -->
+            <div class="flex space-x-4">
+                <?php if (isset($_SESSION['user'])): ?>
+                    <a href="/cours_en_ligne/cours_en_ligne/pages/<?= $_SESSION['user']['role'] ?>/dashboard.php" class="hover:text-gray-200">Tableau de bord</a>
+                    <a href="/cours_en_ligne/cours_en_ligne/includes/auth.php?action=logout" class="hover:text-gray-200">Déconnexion</a>
+                <?php else: ?>
+                    <a href="/cours_en_ligne/cours_en_ligne/auth/login.php" class="hover:text-gray-200">Connexion</a>
+                    <a href="/cours_en_ligne/cours_en_ligne/auth/register.php" class="hover:text-gray-200">Inscription</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </nav>
     <main class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen py-12">
         <div class="container mx-auto px-4">
             <!-- En-tête et recherche -->
@@ -106,7 +131,7 @@ $currentPage = $result['currentPage'];
                                 <!-- Instructeur et prix -->
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
-                                        <img src="../../images/Capture d'écran 2025-01-19 002041.png" alt="Instructeur" class="w-8 h-8 rounded-full">
+                                        <img src="/api/placeholder/32/32" alt="Instructeur" class="w-8 h-8 rounded-full">
                                         <span class="text-sm text-gray-600">Enseignant</span>
                                     </div>
                                     <span class="text-lg font-bold text-blue-500">Gratuit</span>
