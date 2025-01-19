@@ -48,6 +48,7 @@ $currentPage = $result['currentPage'];
             <div class="hidden md:flex items-center space-x-8">
                 <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/index.php" class="hover:text-gray-200">Accueil</a>
                 <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/dashboard2.php" class="hover:text-gray-200">Cours</a>
+                <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/mes_cours.php" class="hover:text-gray-200">Mes Cours</a>
                 <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/categories.php" class="hover:text-gray-200">Catégories</a>
                 <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/enseignants.php" class="hover:text-gray-200">Enseignants</a>
             </div>
