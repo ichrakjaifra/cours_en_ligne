@@ -73,7 +73,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
       $role_id = $role === 'etudiant' ? 1 : ($role === 'enseignant' ? 2 : 3);
 
       // Si l'utilisateur est un étudiant, il est validé par défaut
-      $est_valide = ($role === 'etudiant') ? true : false;
+      $est_valide = ($role === 'etudiant') ? 1 : 0;
 
       // Hacher le mot de passe
       $passwordHash = password_hash($password, PASSWORD_BCRYPT);
