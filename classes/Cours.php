@@ -288,6 +288,61 @@ public static function getCoursWithPagination($page = 1, $perPage = 6, $categori
   }
 }
 
+public static function searchCours($searchTerm) {
+  $db = Database::getInstance()->getConnection();
+  try {
+      $searchTerm = "%$searchTerm%";
+      $stmt = $db->prepare("
+          SELECT * FROM courses 
+          WHERE titre LIKE :searchTerm 
+          OR description LIKE :searchTerm
+      ");
+      $stmt->execute([':searchTerm' => $searchTerm]);
+      
+      $courses = [];
+      while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          if ($row['type'] === 'video') {
+              $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          } else {
+              $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          }
+          $course->id_course = $row['id_course'];
+          $courses[] = $course;
+      }
+      return $courses;
+  } catch (PDOException $e) {
+      error_log("Erreur lors de la recherche des cours : " . $e->getMessage());
+      throw new Exception("Erreur lors de la recherche des cours.");
+  }
+}
+
+public static function getCoursByCategory($categorie_id = null) {
+  $db = Database::getInstance()->getConnection();
+  try {
+      if ($categorie_id) {
+          $stmt = $db->prepare("SELECT * FROM courses WHERE categorie_id = :categorie_id");
+          $stmt->execute([':categorie_id' => $categorie_id]);
+      } else {
+          $stmt = $db->query("SELECT * FROM courses");
+      }
+      
+      $courses = [];
+      while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+          if ($row['type'] === 'video') {
+              $course = new CoursVideo($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          } else {
+              $course = new CoursDocument($row['titre'], $row['description'], $row['image'], $row['contenu'], $row['categorie_id'], $row['enseignant_id']);
+          }
+          $course->id_course = $row['id_course'];
+          $courses[] = $course;
+      }
+      return $courses;
+  } catch (PDOException $e) {
+      error_log("Erreur lors de la récupération des cours par catégorie : " . $e->getMessage());
+      throw new Exception("Erreur lors de la récupération des cours.");
+  }
+}
+
   
 }
 ?>

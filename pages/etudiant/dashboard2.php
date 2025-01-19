@@ -87,21 +87,18 @@ $currentPage = $result['currentPage'];
                 </div>
 
                 <!-- Filtres -->
-                <div class="flex flex-wrap gap-4 mb-8">
-                    <form method="GET" class="flex gap-4">
-                        <select name="categorie" class="px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
-                            <option value="">Toutes les catégories</option>
-                            <?php foreach ($categories as $categorie) : ?>
-                                <option value="<?php echo $categorie->getIdCategorie(); ?>" <?php echo ($selected_category == $categorie->getIdCategorie()) ? 'selected' : ''; ?>>
-                                    <?php echo $categorie->getNom(); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
-                            Filtrer
-                        </button>
-                    </form>
-                </div>
+<div class="flex flex-wrap gap-4 mb-8">
+    <div class="flex gap-4">
+        <select id="categorie-filter" class="px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
+            <option value="">Toutes les catégories</option>
+            <?php foreach ($categories as $categorie) : ?>
+                <option value="<?php echo $categorie->getIdCategorie(); ?>" <?php echo ($selected_category == $categorie->getIdCategorie()) ? 'selected' : ''; ?>>
+                    <?php echo $categorie->getNom(); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+</div>
 
                 <!-- Grille des cours -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -174,6 +171,93 @@ $currentPage = $result['currentPage'];
             </div>
         </div>
     </main>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[type="text"]');
+    const coursesGrid = document.querySelector('.grid');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const searchTerm = this.value.trim();
+
+        // Attendre que l'utilisateur arrête de taper pendant 300ms avant de lancer la recherche
+        searchTimeout = setTimeout(() => {
+            // Si le champ de recherche est vide, recharger tous les cours
+            if (searchTerm === '') {
+                location.reload();
+                return;
+            }
+
+            // Faire la requête Ajax
+            fetch(`search_cours.php?search=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Vider la grille des cours
+                    coursesGrid.innerHTML = '';
+                    
+                    // Afficher les résultats
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            coursesGrid.innerHTML += item.html;
+                        });
+                    } else {
+                        coursesGrid.innerHTML = `
+                            <div class="col-span-full text-center py-8">
+                                <p class="text-gray-500 text-lg">Aucun cours trouvé pour "${searchTerm}"</p>
+                            </div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    coursesGrid.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-red-500 text-lg">Une erreur est survenue lors de la recherche</p>
+                        </div>`;
+                });
+        }, 300);
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorieSelect = document.getElementById('categorie-filter');
+    const coursesGrid = document.querySelector('.grid');
+
+    categorieSelect.addEventListener('change', function() {
+        const selectedCategorie = this.value;
+
+        // Faire la requête Ajax
+        fetch(`filter_cours.php?categorie=${encodeURIComponent(selectedCategorie)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Vider la grille des cours
+                coursesGrid.innerHTML = '';
+                
+                // Afficher les résultats
+                if (data.length > 0) {
+                    data.forEach(item => {
+                        coursesGrid.innerHTML += item.html;
+                    });
+                } else {
+                    coursesGrid.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-gray-500 text-lg">Aucun cours trouvé dans cette catégorie</p>
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                coursesGrid.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <p class="text-red-500 text-lg">Une erreur est survenue lors du filtrage</p>
+                    </div>`;
+            });
+    });
+});
+</script>
     <?php include '../../includes/footer.php'; ?>
 </body>
 </html>
