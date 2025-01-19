@@ -1,12 +1,31 @@
-<?
+<?php
 session_start();
+require_once '../../classes/Administrateur.php';
 
 // Vérifier si l'utilisateur est connecté et est un administrateur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
     exit();
 }
+
+// Créer une instance de l'administrateur
+$admin = new Administrateur($_SESSION['user']['id'], $_SESSION['user']['nom'], $_SESSION['user']['prenom'], $_SESSION['user']['email'], null, $_SESSION['user']['role']);
+
+// Récupérer les statistiques
+try {
+    $statistiquesGlobales = $admin->accederStatistiquesGlobales();
+    $coursParCategorie = $admin->getNombreCoursParCategorie();
+    $coursPlusPopulaire = $admin->getCoursPlusPopulaire();
+    $top3Enseignants = $admin->getTop3Enseignants();
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    $statistiquesGlobales = [];
+    $coursParCategorie = [];
+    $coursPlusPopulaire = [];
+    $top3Enseignants = [];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,14 +40,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-5px);
         }
 
         .ocean-gradient {
@@ -64,7 +75,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Cours</span>
                 </a>
-
                 <div class="relative">
                     <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl" id="toggleCategories">
                         <i class="fas fa-tags text-lg"></i>
@@ -86,7 +96,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
                         </li>
                     </ul>
                 </div>
-
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
                     <span class="font-medium">Paramètres</span>
@@ -114,7 +123,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
         <main class="flex-1 ml-72 p-8">
             <!-- Top Navigation -->
             <div class="flex justify-between items-center mb-12 bg-white rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center">
+            <div class="flex items-center">
                     <div class="relative">
                         <input type="text" placeholder="Search..." 
                                class="pl-12 pr-4 py-3 bg-slate-50 rounded-xl w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
@@ -148,117 +157,94 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <!-- Nombre total d'utilisateurs -->
                 <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
                     <div class="flex items-center">
                         <div class="bg-blue-100 p-4 rounded-xl">
                             <i class="fas fa-users text-blue-600 text-2xl"></i>
                         </div>
                         <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Total Users</h3>
-                            <p class="text-3xl font-bold text-slate-800">3,842</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>12%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium mb-1">Total Utilisateurs</h3>
+                            <p class="text-3xl font-bold text-slate-800"><?= $statistiquesGlobales['total_utilisateurs'] ?? 0 ?></p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Nombre total de cours -->
                 <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
                     <div class="flex items-center">
                         <div class="bg-emerald-100 p-4 rounded-xl">
                             <i class="fas fa-book text-emerald-600 text-2xl"></i>
                         </div>
                         <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Active Courses</h3>
-                            <p class="text-3xl font-bold text-slate-800">526</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>18%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium mb-1">Total Cours</h3>
+                            <p class="text-3xl font-bold text-slate-800"><?= $statistiquesGlobales['total_cours'] ?? 0 ?></p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Nombre total d'enseignants -->
                 <div class="card-hover bg-white rounded-2xl shadow-sm p-8">
                     <div class="flex items-center">
                         <div class="bg-violet-100 p-4 rounded-xl">
-                            <i class="fas fa-tags text-violet-600 text-2xl"></i>
+                            <i class="fas fa-chalkboard-teacher text-violet-600 text-2xl"></i>
                         </div>
                         <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Total Categories</h3>
-                            <p class="text-3xl font-bold text-slate-800">148</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-plus mr-1"></i>8 new
-                                </span>
-                                <span class="text-slate-400 ml-2">this week</span>
-                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium mb-1">Total Enseignants</h3>
+                            <p class="text-3xl font-bold text-slate-800"><?= $statistiquesGlobales['total_enseignants'] ?? 0 ?></p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Courses Table -->
-            <div class="bg-white rounded-2xl shadow-sm">
+            <!-- Cours par catégorie -->
+            <div class="bg-white rounded-2xl shadow-sm mb-12">
                 <div class="p-8 border-b border-slate-100">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800">Recent Courses</h2>
-                        <button class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300">
-                            Add Course
-                        </button>
+                    <h2 class="text-xl font-bold text-slate-800">Répartition des cours par catégorie</h2>
+                </div>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <?php foreach ($coursParCategorie as $categorie) : ?>
+                            <div class="bg-slate-50 p-6 rounded-lg">
+                                <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($categorie['categorie']) ?></h3>
+                                <p class="text-2xl font-bold text-blue-600"><?= $categorie['nombre_cours'] ?></p>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-                <div class="overflow-x-auto p-4">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left">
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">User</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Course</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Date</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Status</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition-all duration-300">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-medium mr-3">
-                                            JD
-                                        </div>
-                                        <div>
-                                            <p class="font-medium text-slate-800">John Doe</p>
-                                            <p class="text-sm text-slate-500">john@example.com</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-slate-600">Introduction to Programming</td>
-                                <td class="px-6 py-4 text-slate-600">Dec 28, 2024</td>
-                                <td class="px-6 py-4">
-                                    <span class="status-badge bg-emerald-100 text-emerald-700">Active</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex space-x-3">
-                                        <button class="text-blue-500 hover:text-blue-700" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="text-slate-500 hover:text-slate-700" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-red-500 hover:text-red-700" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- More table rows... -->
-                        </tbody>
-                    </table>
+            </div>
+
+            <!-- Cours le plus populaire -->
+            <div class="bg-white rounded-2xl shadow-sm mb-12">
+                <div class="p-8 border-b border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-800">Cours le plus populaire</h2>
+                </div>
+                <div class="p-8">
+                    <?php if ($coursPlusPopulaire) : ?>
+                        <div class="bg-slate-50 p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($coursPlusPopulaire['titre']) ?></h3>
+                            <p class="text-2xl font-bold text-blue-600"><?= $coursPlusPopulaire['nombre_inscriptions'] ?> inscriptions</p>
+                        </div>
+                    <?php else : ?>
+                        <p class="text-slate-600">Aucun cours trouvé.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Top 3 enseignants -->
+            <div class="bg-white rounded-2xl shadow-sm mb-12">
+                <div class="p-8 border-b border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-800">Top 3 Enseignants</h2>
+                </div>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <?php foreach ($top3Enseignants as $enseignant) : ?>
+                            <div class="bg-slate-50 p-6 rounded-lg">
+                                <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($enseignant['nom'] . ' ' . $enseignant['prenom']) ?></h3>
+                                <p class="text-2xl font-bold text-blue-600"><?= $enseignant['nombre_cours'] ?> cours</p>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </main>

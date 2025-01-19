@@ -1,4 +1,5 @@
 <?php
+require_once 'Database.php'; 
 require_once 'Utilisateur.php'; 
 
 class Administrateur extends Utilisateur {
@@ -145,5 +146,65 @@ class Administrateur extends Utilisateur {
             throw new Exception("Erreur lors de la récupération des statistiques : " . $e->getMessage());
         }
     }
+
+
+    // Méthode pour récupérer le nombre de cours par catégorie
+    public function getNombreCoursParCategorie() {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("
+              SELECT c.nom AS categorie, COUNT(co.id_course) AS nombre_cours
+              FROM categories c
+              LEFT JOIN courses co ON c.id_categorie = co.categorie_id
+              GROUP BY c.id_categorie
+          ");
+          $stmt->execute();
+          return $stmt->fetchAll(PDO::FETCH_ASSOC);
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération des cours par catégorie : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération des cours par catégorie.");
+      }
+  }
+
+  // Méthode pour récupérer le cours le plus populaire
+  public function getCoursPlusPopulaire() {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("
+              SELECT c.titre, COUNT(i.etudiant_id) AS nombre_inscriptions
+              FROM courses c
+              LEFT JOIN inscriptions i ON c.id_course = i.course_id
+              GROUP BY c.id_course
+              ORDER BY nombre_inscriptions DESC
+              LIMIT 1
+          ");
+          $stmt->execute();
+          return $stmt->fetch(PDO::FETCH_ASSOC);
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération du cours le plus populaire : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération du cours le plus populaire.");
+      }
+  }
+
+  // Méthode pour récupérer les top 3 enseignants
+  public function getTop3Enseignants() {
+      $db = Database::getInstance()->getConnection();
+      try {
+          $stmt = $db->prepare("
+              SELECT u.nom, u.prenom, COUNT(c.id_course) AS nombre_cours
+              FROM utilisateurs u
+              JOIN courses c ON u.id_utilisateur = c.enseignant_id
+              WHERE u.role_id = 2
+              GROUP BY u.id_utilisateur
+              ORDER BY nombre_cours DESC
+              LIMIT 3
+          ");
+          $stmt->execute();
+          return $stmt->fetchAll(PDO::FETCH_ASSOC);
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération des top 3 enseignants : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération des top 3 enseignants.");
+      }
+  }
 }
 ?>
