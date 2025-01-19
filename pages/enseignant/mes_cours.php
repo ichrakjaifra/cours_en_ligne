@@ -205,10 +205,10 @@ $cours = Cours::getAllCour($enseignant_id);
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Mes Cours</span>
                 </a>
-                <a href="statistiques.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                <!-- <a href="statistiques.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-chart-line text-lg"></i>
                     <span class="font-medium">Statistiques</span>
-                </a>
+                </a> -->
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
                     <span class="font-medium">Paramètres</span>

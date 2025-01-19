@@ -20,6 +20,14 @@ try {
     $statistiques = [];
 }
 
+// Récupérer le nombre de catégories
+try {
+  $nombreCategories = $enseignant->getNombreCategories();
+} catch (Exception $e) {
+  $_SESSION['error'] = $e->getMessage();
+  $nombreCategories = 0; // Valeur par défaut en cas d'erreur
+}
+
 // Récupérer les inscriptions des étudiants pour tous les cours de l'enseignant
 try {
   $inscriptions = $enseignant->consulterInscriptions();
@@ -82,10 +90,10 @@ try {
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Mes Cours</span>
                 </a>
-                <a href="statistiques.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                <!-- <a href="statistiques.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-chart-line text-lg"></i>
                     <span class="font-medium">Statistiques</span>
-                </a>
+                </a> -->
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
                     <span class="font-medium">Paramètres</span>
@@ -161,9 +169,9 @@ try {
                             <i class="fas fa-tags text-violet-600 text-2xl"></i>
                         </div>
                         <div class="ml-6">
-                            <h3 class="text-slate-500 text-sm font-medium mb-1">Catégories</h3>
-                            <p class="text-3xl font-bold text-slate-800">12</p>
-                        </div>
+            <h3 class="text-slate-500 text-sm font-medium mb-1">Catégories</h3>
+            <p class="text-3xl font-bold text-slate-800"><?php echo $nombreCategories; ?></p>
+        </div>
                     </div>
                 </div>
             </div>

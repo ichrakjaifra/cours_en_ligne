@@ -81,5 +81,23 @@ class Enseignant extends Utilisateur {
           throw new Exception("Erreur lors de la récupération des enseignants.");
       }
   }
+
+  public function getNombreCategories() {
+    $db = Database::getInstance()->getConnection();
+    try {
+        // Récupérer le nombre de catégories distinctes pour les cours de l'enseignant
+        $stmt = $db->prepare("
+            SELECT COUNT(DISTINCT c.categorie_id) AS nombre_categories
+            FROM courses c
+            WHERE c.enseignant_id = ?
+        ");
+        $stmt->execute([$this->getId()]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['nombre_categories'];
+    } catch (PDOException $e) {
+        error_log("Erreur lors de la récupération du nombre de catégories : " . $e->getMessage());
+        throw new Exception("Erreur lors de la récupération du nombre de catégories.");
+    }
+}
 }
 ?>
