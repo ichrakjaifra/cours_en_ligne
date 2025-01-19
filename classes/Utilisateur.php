@@ -73,6 +73,15 @@ class Utilisateur {
         $user = self::findByEmail($email);
 
         if ($user && password_verify($password, $user->getPassword())) {
+          // Vérifier si l'utilisateur est suspendu
+        if ($user->getStatut() === 'suspendu') {
+          throw new Exception("Votre compte est suspendu. Veuillez contacter l'administrateur.");
+      }
+
+      // Vérifier si l'utilisateur est un enseignant non validé
+      if ($user->getRoleId() === 2 && !$user->estValide()) {
+          throw new Exception("Votre compte enseignant n'a pas encore été validé par un administrateur.");
+      }
             return $user;
         }
 
