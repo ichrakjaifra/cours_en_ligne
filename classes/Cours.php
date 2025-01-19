@@ -217,6 +217,22 @@ public static function getAllCour($enseignant_id = null) {
     }
 }
 
+public static function getAllCoursWithEnseignant() {
+  $db = Database::getInstance()->getConnection();
+  try {
+      $stmt = $db->prepare("
+          SELECT c.*, u.nom AS enseignant_nom, u.prenom AS enseignant_prenom 
+          FROM courses c
+          JOIN utilisateurs u ON c.enseignant_id = u.id_utilisateur
+      ");
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  } catch (PDOException $e) {
+      error_log("Erreur lors de la récupération des cours avec enseignants : " . $e->getMessage());
+      throw new Exception("Erreur lors de la récupération des cours avec enseignants.");
+  }
+}
+
 public static function getCoursWithPagination($page = 1, $perPage = 6, $categorie_id = null) {
   $db = Database::getInstance()->getConnection();
   try {

@@ -3,7 +3,7 @@ require_once 'Utilisateur.php';
 
 class Administrateur extends Utilisateur {
     // Constructeur
-    public function __construct($id, $nom, $prenom, $email, $passwordHash = null, $role_id, $statut = 'active', $est_valide = false) {
+    public function __construct($id, $nom, $prenom, $email, $passwordHash = null, $role_id, $statut = 'active', $est_valide = true) {
         parent::__construct($id, $nom, $prenom, $email, $passwordHash, $role_id, $statut, $est_valide);
     }
 
@@ -34,21 +34,6 @@ class Administrateur extends Utilisateur {
           throw new Exception("Erreur lors de la validation du compte enseignant : " . $e->getMessage());
       }
   }
-    // public function validerCompteEnseignant($enseignantId) {
-    //     $db = Database::getInstance()->getConnection();
-    //     try {
-    //         $stmt = $db->prepare("UPDATE utilisateurs SET est_valide = TRUE WHERE id_utilisateur = ? AND role_id = 2");
-    //         $stmt->execute([$enseignantId]);
-
-    //         if ($stmt->rowCount() > 0) {
-    //             return "Le compte enseignant a été validé avec succès.";
-    //         } else {
-    //             throw new Exception("Aucun enseignant trouvé avec cet ID.");
-    //         }
-    //     } catch (PDOException $e) {
-    //         throw new Exception("Erreur lors de la validation du compte enseignant : " . $e->getMessage());
-    //     }
-    // }
 
     // Méthode pour gérer les utilisateurs (activer, suspendre, supprimer)
     public function gererUtilisateur($utilisateurId, $action) {
@@ -88,34 +73,6 @@ class Administrateur extends Utilisateur {
           throw new Exception("Erreur lors de la gestion de l'utilisateur : " . $e->getMessage());
       }
   }
-    // public function gererUtilisateur($utilisateurId, $action) {
-    //     $db = Database::getInstance()->getConnection();
-    //     try {
-    //         switch ($action) {
-    //             case 'activer':
-    //                 $stmt = $db->prepare("UPDATE utilisateurs SET statut = 'active' WHERE id_utilisateur = ?");
-    //                 break;
-    //             case 'suspendre':
-    //                 $stmt = $db->prepare("UPDATE utilisateurs SET statut = 'suspendu' WHERE id_utilisateur = ?");
-    //                 break;
-    //             case 'supprimer':
-    //                 $stmt = $db->prepare("DELETE FROM utilisateurs WHERE id_utilisateur = ?");
-    //                 break;
-    //             default:
-    //                 throw new Exception("Action non reconnue.");
-    //         }
-
-    //         $stmt->execute([$utilisateurId]);
-
-    //         if ($stmt->rowCount() > 0) {
-    //             return "Action '$action' effectuée avec succès sur l'utilisateur.";
-    //         } else {
-    //             throw new Exception("Aucun utilisateur trouvé avec cet ID.");
-    //         }
-    //     } catch (PDOException $e) {
-    //         throw new Exception("Erreur lors de la gestion de l'utilisateur : " . $e->getMessage());
-    //     }
-    // }
 
     // Méthode pour gérer les contenus (cours, catégories, tags)
     public function gererContenus($contenuId, $type, $action) {

@@ -74,7 +74,7 @@ $categories = Categorie::getAllCategorie();
                     <i class="fas fa-users text-lg"></i>
                     <span class="font-medium">Utilisateurs</span>
                 </a>
-                <a href="reserv.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                <a href="cours.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Cours</span>
                 </a>

@@ -1,32 +1,22 @@
 <?php
-require_once '../../classes/Tag.php';
+session_start();
 
-// Gestion des requêtes POST (ajout, modification, suppression)
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Ajouter un tag
-    if (isset($_POST['add_tag'])) {
-        $nom = $_POST['nom'];
-        $tag = new Tag(null, $nom);
-        $tag->insertTag();
-    }
-
-    // Modifier un tag
-    if (isset($_POST['update_tag'])) {
-        $tagId = $_POST['tagId'];
-        $nom = $_POST['nom'];
-        $tag = new Tag($tagId, $nom);
-        $tag->updateTag($tagId);
-    }
-
-    // Supprimer un tag
-    if (isset($_POST['delete_tag'])) {
-        $tagId = $_POST['tagId'];
-        Tag::deleteTag($tagId);
-    }
+// Vérifier si l'utilisateur est connecté et est un administrateur
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: /cours_en_ligne/auth/login.php");
+    exit();
 }
 
-// Récupérer tous les tags pour affichage
-$tags = Tag::getAllTags();
+require_once '../../classes/Cours.php';
+require_once '../../classes/Utilisateur.php';
+
+// Récupérer tous les cours avec les enseignants
+try {
+    $cours = Cours::getAllCoursWithEnseignant();
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    $cours = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +24,7 @@ $tags = Tag::getAllTags();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Tags</title>
+    <title>Gestion des Cours</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
@@ -66,7 +56,7 @@ $tags = Tag::getAllTags();
             </div>
 
             <nav class="space-y-6">
-                <a href="dashboord.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
+                <a href="dashboard.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
                     <i class="fas fa-th-large text-lg"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
@@ -78,13 +68,17 @@ $tags = Tag::getAllTags();
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Cours</span>
                 </a>
-                <a href="tags.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                <a href="categories.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-tags text-lg"></i>
+                    <span class="font-medium">Catégories</span>
+                </a>
+                <a href="tags.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                    <i class="fas fa-hashtag text-lg"></i>
                     <span class="font-medium">Tags</span>
                 </a>
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
-                    <span class="font-medium">Paramètres</span>
+                    <span class="font-medium">Settings</span>
                 </a>
             </nav>
         </aside>
@@ -110,9 +104,9 @@ $tags = Tag::getAllTags();
                     <div class="relative group">
                         <button class="flex items-center bg-slate-50 rounded-xl p-2 pr-4 hover:bg-slate-100 transition-all duration-300">
                             <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
-                                TA
+                                <?php echo strtoupper(substr($_SESSION['user']['nom'], 0, 1)); ?>
                             </div>
-                            <span class="font-medium text-slate-700">Admin</span>
+                            <span class="font-medium text-slate-700"><?php echo $_SESSION['user']['nom']; ?></span>
                             <i class="fas fa-chevron-down ml-3 text-slate-400 transition-transform group-hover:rotate-180"></i>
                         </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
@@ -125,13 +119,13 @@ $tags = Tag::getAllTags();
                 </div>
             </div>
 
-            <!-- Tags Table -->
+            <!-- Cours Table -->
             <div class="bg-white rounded-2xl shadow-sm">
                 <div class="p-8 border-b border-slate-100">
                     <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800">Gestion des Tags</h2>
-                        <button onclick="toggleTagModal()" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300">
-                            <i class="fas fa-plus mr-2"></i>Ajouter un Tag
+                        <h2 class="text-xl font-bold text-slate-800">Gestion des Cours</h2>
+                        <button onclick="toggleCourseModal()" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300">
+                            <i class="fas fa-plus mr-2"></i>Ajouter un Cours
                         </button>
                     </div>
                 </div>
@@ -141,22 +135,26 @@ $tags = Tag::getAllTags();
                     <table class="min-w-full border-collapse">
                         <thead>
                             <tr class="text-left bg-slate-50">
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nom</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Titre</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Description</th>
+                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Enseignant</th>
                                 <th class="px-6 py-4 text-sm font-semibold text-slate-600">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <?php foreach ($tags as $tag) : ?>
+                            <?php foreach ($cours as $c) : ?>
                                 <tr class="hover:bg-slate-50 transition-all duration-300">
-                                    <td class="px-6 py-4 text-slate-800 font-medium"><?php echo $tag->getNom(); ?></td>
+                                    <td class="px-6 py-4 text-slate-800 font-medium"><?php echo $c['titre']; ?></td>
+                                    <td class="px-6 py-4 text-slate-800"><?php echo $c['description']; ?></td>
+                                    <td class="px-6 py-4 text-slate-800"><?php echo $c['enseignant_nom'] . ' ' . $c['enseignant_prenom']; ?></td>
                                     <td class="px-6 py-4">
                                         <div class="flex space-x-3">
-                                            <button onclick="editTag('<?php echo $tag->getIdTag(); ?>', '<?php echo $tag->getNom(); ?>')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                                            <button onclick="editCourse('<?php echo $c['id_course']; ?>')" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
                                                 Modifier
                                             </button>
                                             <form method="POST">
-                                                <input type="hidden" name="tagId" value="<?php echo $tag->getIdTag(); ?>">
-                                                <button type="submit" name="delete_tag" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                                <input type="hidden" name="course_id" value="<?php echo $c['id_course']; ?>">
+                                                <button type="submit" name="delete_course" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
                                                     Supprimer
                                                 </button>
                                             </form>
@@ -168,47 +166,7 @@ $tags = Tag::getAllTags();
                     </table>
                 </div>
             </div>
-
-            <!-- Modal for Adding or Editing Tag -->
-            <div id="tagModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
-                <div class="bg-white rounded-lg shadow-lg p-6 w-1/3">
-                    <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-4">Ajouter un Tag</h3>
-                    <form method="POST">
-                        <div class="mb-4">
-                            <label for="nom" class="block text-sm font-semibold text-slate-600">Nom</label>
-                            <input type="text" id="nom" name="nom" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
-                        </div>
-                        <input type="hidden" id="tagId" name="tagId">
-                        <div class="flex justify-end">
-                            <button type="submit" id="submitButton" name="add_tag" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Ajouter</button>
-                            <button type="button" onclick="closeTagModal()" class="ml-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400">Annuler</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </main>
     </div>
-
-    <script>
-        // Fonction pour afficher ou masquer le modal
-        function toggleTagModal() {
-            document.getElementById('tagModal').classList.toggle('hidden');
-        }
-
-        // Fonction pour fermer le modal
-        function closeTagModal() {
-            document.getElementById('tagModal').classList.add('hidden');
-        }
-
-        // Fonction pour pré-remplir le formulaire lors de la modification
-        function editTag(id, nom) {
-            document.getElementById('nom').value = nom;
-            document.getElementById('tagId').value = id;
-            document.getElementById('modalTitle').innerText = 'Modifier un Tag';
-            document.getElementById('submitButton').innerText = 'Modifier';
-            document.getElementById('submitButton').name = 'update_tag';
-            toggleTagModal();
-        }
-    </script>
 </body>
 </html>
