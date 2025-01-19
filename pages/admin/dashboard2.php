@@ -52,7 +52,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             </div>
 
             <nav class="space-y-6">
-                <a href="dashboord.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
+                <a href="dashboard2.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
                     <i class="fas fa-th-large text-lg"></i>
                     <span class="font-medium">Tableau de Bord</span>
                 </a>

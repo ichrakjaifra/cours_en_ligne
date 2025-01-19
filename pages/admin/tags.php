@@ -3,6 +3,12 @@ require_once '../../classes/Tag.php';
 
 // Gestion des requêtes POST (ajout, modification, suppression)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  if (isset($_POST['add_multiple_tags'])) {
+    $tagNames = explode("\n", $_POST['tag_names']);
+    $tagNames = array_map('trim', $tagNames);
+    $tagNames = array_filter($tagNames); // Enlève les lignes vides
+    Tag::insertMultipleTags($tagNames);
+}
     // Ajouter un tag
     if (isset($_POST['add_tag'])) {
         $nom = $_POST['nom'];
@@ -66,9 +72,9 @@ $tags = Tag::getAllTags();
             </div>
 
             <nav class="space-y-6">
-                <a href="dashboord.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
+                <a href="dashboard2.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
                     <i class="fas fa-th-large text-lg"></i>
-                    <span class="font-medium">Dashboard</span>
+                    <span class="font-medium">Tableau de Bord</span>
                 </a>
                 <a href="utilisateur.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-users text-lg"></i>
@@ -78,16 +84,49 @@ $tags = Tag::getAllTags();
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Cours</span>
                 </a>
-                <a href="tags.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
-                    <i class="fas fa-tags text-lg"></i>
-                    <span class="font-medium">Tags</span>
-                </a>
+                <div class="relative">
+                    <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl" id="toggleCategories">
+                        <i class="fas fa-tags text-lg"></i>
+                        <span class="font-medium">Catégories</span>
+                    </a>
+
+                    <ul class="absolute left-0 w-full bg-white bg-opacity-10 rounded-xl mt-2 hidden" id="categoriesDropdown">
+                        <li>
+                            <a href="categories.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                                <i class="fas fa-tags text-lg"></i>
+                                <span class="font-medium">Catégories</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="tags.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+                                <i class="fas fa-hashtag text-lg"></i>
+                                <span class="font-medium">Tags</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
                     <span class="font-medium">Paramètres</span>
                 </a>
             </nav>
         </aside>
+
+        <script>
+            const toggleButton = document.getElementById('toggleCategories');
+            const dropdownMenu = document.getElementById('categoriesDropdown');
+
+            toggleButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', function(e) {
+                if (!e.target.closest('.relative')) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        </script>
 
         <!-- Main Content -->
         <main class="flex-1 ml-72 p-8">
@@ -170,7 +209,7 @@ $tags = Tag::getAllTags();
             </div>
 
             <!-- Modal for Adding or Editing Tag -->
-            <div id="tagModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
+            <!-- <div id="tagModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
                 <div class="bg-white rounded-lg shadow-lg p-6 w-1/3">
                     <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-4">Ajouter un Tag</h3>
                     <form method="POST">
@@ -187,7 +226,55 @@ $tags = Tag::getAllTags();
                 </div>
             </div>
         </main>
+    </div> -->
+    <!-- Modal for Adding or Editing Tag -->
+<div id="tagModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-1/3">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Ajouter des Tags</h3>
+            <button onclick="toggleBulkMode()" id="toggleModeBtn" class="text-sm text-blue-500 hover:text-blue-600">
+                Basculer mode multiple
+            </button>
+        </div>
+        
+        <!-- Formulaire pour tag unique -->
+        <form method="POST" id="singleTagForm">
+            <div class="mb-4">
+                <label for="nom" class="block text-sm font-semibold text-slate-600">Nom</label>
+                <input type="text" id="nom" name="nom" class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg" required>
+            </div>
+            <input type="hidden" id="tagId" name="tagId">
+            <div class="flex justify-end">
+                <button type="submit" id="submitButton" name="add_tag" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">Ajouter</button>
+                <button type="button" onclick="closeTagModal()" class="ml-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400">Annuler</button>
+            </div>
+        </form>
+
+        <!-- Formulaire pour tags multiples -->
+        <form method="POST" id="multipleTagForm" class="hidden">
+            <div class="mb-4">
+                <label for="tag_names" class="block text-sm font-semibold text-slate-600">
+                    Noms des Tags (un par ligne)
+                    <span class="text-sm text-gray-500 font-normal ml-2">Maximum 10 tags</span>
+                </label>
+                <textarea id="tag_names" name="tag_names" 
+                    class="mt-2 px-4 py-2 w-full border border-slate-300 rounded-lg h-40"
+                    placeholder="Entrez chaque tag sur une nouvelle ligne"
+                    required></textarea>
+                <div id="tagCounter" class="text-sm text-gray-500 mt-1">0/10 tags</div>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" name="add_multiple_tags" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600">
+                    Ajouter les tags
+                </button>
+                <button type="button" onclick="closeTagModal()" class="ml-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400">
+                    Annuler
+                </button>
+            </div>
+        </form>
     </div>
+</div>
+
 
     <script>
         // Fonction pour afficher ou masquer le modal
@@ -210,5 +297,62 @@ $tags = Tag::getAllTags();
             toggleTagModal();
         }
     </script>
+
+<script>
+    let isMultipleMode = false;
+
+    function toggleBulkMode() {
+        isMultipleMode = !isMultipleMode;
+        document.getElementById('singleTagForm').classList.toggle('hidden');
+        document.getElementById('multipleTagForm').classList.toggle('hidden');
+        document.getElementById('modalTitle').innerText = isMultipleMode ? 'Ajouter plusieurs Tags' : 'Ajouter un Tag';
+    }
+
+    // Gestionnaire pour compter et limiter les tags
+    document.getElementById('tag_names').addEventListener('input', function(e) {
+        const lines = e.target.value.split('\n').filter(line => line.trim() !== '');
+        const count = lines.length;
+        
+        document.getElementById('tagCounter').textContent = `${count}/10 tags`;
+        
+        if (count > 10) {
+            const validLines = lines.slice(0, 10);
+            e.target.value = validLines.join('\n');
+            document.getElementById('tagCounter').textContent = '10/10 tags';
+        }
+    });
+
+    // Fonction pour afficher ou masquer le modal
+    function toggleTagModal() {
+        document.getElementById('tagModal').classList.toggle('hidden');
+        // Réinitialiser à la vue simple par défaut
+        if (isMultipleMode) {
+            toggleBulkMode();
+        }
+    }
+
+    // Fonction pour fermer le modal
+    function closeTagModal() {
+        document.getElementById('tagModal').classList.add('hidden');
+        // Réinitialiser les formulaires
+        document.getElementById('singleTagForm').reset();
+        document.getElementById('multipleTagForm').reset();
+        document.getElementById('tagCounter').textContent = '0/10 tags';
+    }
+
+    // Fonction pour éditer un tag (mode unique seulement)
+    function editTag(id, nom) {
+        if (isMultipleMode) {
+            toggleBulkMode();
+        }
+        document.getElementById('nom').value = nom;
+        document.getElementById('tagId').value = id;
+        document.getElementById('modalTitle').innerText = 'Modifier un Tag';
+        document.getElementById('submitButton').innerText = 'Modifier';
+        document.getElementById('submitButton').name = 'update_tag';
+        document.getElementById('toggleModeBtn').style.display = 'none';
+        toggleTagModal();
+    }
+</script>
 </body>
 </html>

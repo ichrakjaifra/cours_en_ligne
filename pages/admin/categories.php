@@ -66,9 +66,9 @@ $categories = Categorie::getAllCategorie();
             </div>
 
             <nav class="space-y-6">
-                <a href="dashboord.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
+                <a href="dashboard2.php" class="flex items-center space-x-4 px-6 py-4 bg-white bg-opacity-10 rounded-xl">
                     <i class="fas fa-th-large text-lg"></i>
-                    <span class="font-medium">Dashboard</span>
+                    <span class="font-medium">Tableau de Bord</span>
                 </a>
                 <a href="utilisateur.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-users text-lg"></i>
@@ -101,7 +101,7 @@ $categories = Categorie::getAllCategorie();
                 </div>
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
-                    <span class="font-medium">Settings</span>
+                    <span class="font-medium">Paramètres</span>
                 </a>
             </nav>
         </aside>

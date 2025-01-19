@@ -100,5 +100,32 @@ class Tag {
           throw new Exception("Erreur lors de la récupération du tag.");
       }
   }
+
+  public static function insertMultipleTags($tags) {
+    $db = Database::getInstance()->getConnection();
+    try {
+        // Démarrer une transaction
+        $db->beginTransaction();
+        
+        $stmt = $db->prepare("INSERT INTO tags (nom) VALUES (:nom)");
+        $insertedTags = [];
+        
+        foreach ($tags as $tagName) {
+            if (!empty(trim($tagName))) {
+                $stmt->execute([':nom' => trim($tagName)]);
+                $insertedTags[] = new Tag($db->lastInsertId(), trim($tagName));
+            }
+        }
+        
+        // Valider la transaction
+        $db->commit();
+        return $insertedTags;
+    } catch (PDOException $e) {
+        // En cas d'erreur, annuler la transaction
+        $db->rollBack();
+        error_log("Erreur lors de l'insertion multiple des tags : " . $e->getMessage());
+        throw new Exception("Erreur lors de l'insertion des tags.");
+    }
+}
 }
 ?>
