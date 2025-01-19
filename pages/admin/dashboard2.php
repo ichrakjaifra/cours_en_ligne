@@ -198,55 +198,73 @@ try {
             </div>
 
             <!-- Cours par catégorie -->
-            <div class="bg-white rounded-2xl shadow-sm mb-12">
-                <div class="p-8 border-b border-slate-100">
-                    <h2 class="text-xl font-bold text-slate-800">Répartition des cours par catégorie</h2>
-                </div>
-                <div class="p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <?php foreach ($coursParCategorie as $categorie) : ?>
-                            <div class="bg-slate-50 p-6 rounded-lg">
-                                <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($categorie['categorie']) ?></h3>
-                                <p class="text-2xl font-bold text-blue-600"><?= $categorie['nombre_cours'] ?></p>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cours le plus populaire -->
-            <div class="bg-white rounded-2xl shadow-sm mb-12">
-                <div class="p-8 border-b border-slate-100">
-                    <h2 class="text-xl font-bold text-slate-800">Cours le plus populaire</h2>
-                </div>
-                <div class="p-8">
-                    <?php if ($coursPlusPopulaire) : ?>
-                        <div class="bg-slate-50 p-6 rounded-lg">
-                            <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($coursPlusPopulaire['titre']) ?></h3>
-                            <p class="text-2xl font-bold text-blue-600"><?= $coursPlusPopulaire['nombre_inscriptions'] ?> inscriptions</p>
+<div class="bg-white rounded-2xl shadow-sm mb-12">
+    <div class="p-8 border-b border-slate-100">
+        <h2 class="text-xl font-bold text-slate-800">Répartition des cours par catégorie</h2>
+    </div>
+    <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <?php foreach ($coursParCategorie as $categorie) : ?>
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-500 p-3 rounded-full">
+                            <i class="fas fa-book text-white text-xl"></i>
                         </div>
-                    <?php else : ?>
-                        <p class="text-slate-600">Aucun cours trouvé.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Top 3 enseignants -->
-            <div class="bg-white rounded-2xl shadow-sm mb-12">
-                <div class="p-8 border-b border-slate-100">
-                    <h2 class="text-xl font-bold text-slate-800">Top 3 Enseignants</h2>
-                </div>
-                <div class="p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <?php foreach ($top3Enseignants as $enseignant) : ?>
-                            <div class="bg-slate-50 p-6 rounded-lg">
-                                <h3 class="text-lg font-semibold text-slate-800"><?= htmlspecialchars($enseignant['nom'] . ' ' . $enseignant['prenom']) ?></h3>
-                                <p class="text-2xl font-bold text-blue-600"><?= $enseignant['nombre_cours'] ?> cours</p>
-                            </div>
-                        <?php endforeach; ?>
+                        <h3 class="text-lg font-semibold text-slate-800 ml-4"><?= htmlspecialchars($categorie['categorie']) ?></h3>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-600 mb-2"><?= $categorie['nombre_cours'] ?> cours</p>
+                    <div class="w-full bg-blue-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: <?= ($categorie['nombre_cours'] / $statistiquesGlobales['total_cours']) * 100 ?>%"></div>
                     </div>
                 </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Cours le plus populaire -->
+<div class="bg-white rounded-2xl shadow-sm mb-12">
+    <div class="p-8 border-b border-slate-100">
+        <h2 class="text-xl font-bold text-slate-800">Cours le plus populaire</h2>
+    </div>
+    <div class="p-8">
+        <?php if ($coursPlusPopulaire) : ?>
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-8 rounded-lg hover:scale-105 transition-transform duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-emerald-500 p-3 rounded-full">
+                        <i class="fas fa-trophy text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-800 ml-4"><?= htmlspecialchars($coursPlusPopulaire['titre']) ?></h3>
+                </div>
+                <p class="text-2xl font-bold text-emerald-600"><?= $coursPlusPopulaire['nombre_inscriptions'] ?> inscriptions</p>
             </div>
+        <?php else : ?>
+            <p class="text-slate-600">Aucun cours trouvé.</p>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Top 3 enseignants -->
+<div class="bg-white rounded-2xl shadow-sm mb-12">
+    <div class="p-8 border-b border-slate-100">
+        <h2 class="text-xl font-bold text-slate-800">Top 3 Enseignants</h2>
+    </div>
+    <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <?php foreach ($top3Enseignants as $enseignant) : ?>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-purple-500 p-3 rounded-full">
+                            <i class="fas fa-chalkboard-teacher text-white text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-800 ml-4"><?= htmlspecialchars($enseignant['nom'] . ' ' . $enseignant['prenom']) ?></h3>
+                    </div>
+                    <p class="text-2xl font-bold text-purple-600"><?= $enseignant['nombre_cours'] ?> cours</p>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
         </main>
     </div>
 </body>
