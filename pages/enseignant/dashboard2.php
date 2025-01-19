@@ -1,10 +1,31 @@
 <?php
 session_start();
+require_once '../../classes/Database.php';
+require_once '../../classes/Enseignant.php';
 
-// Vérifier si l'utilisateur est connecté et est un enseignant
+// Vérifier si l'utilisateur est connecté et est un enseignant validé
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !$_SESSION['user']['est_valide']) {
-  header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
-  exit();
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
+    exit();
+}
+
+// Créer une instance de l'enseignant
+$enseignant = new Enseignant($_SESSION['user']['id'], $_SESSION['user']['nom'], $_SESSION['user']['prenom'], $_SESSION['user']['email'], '');
+
+// Récupérer les statistiques des cours
+try {
+    $statistiques = $enseignant->accederStatistiques();
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    $statistiques = [];
+}
+
+// Récupérer les inscriptions des étudiants pour tous les cours de l'enseignant
+try {
+  $inscriptions = $enseignant->consulterInscriptions();
+} catch (Exception $e) {
+  $_SESSION['error'] = $e->getMessage();
+  $inscriptions = [];
 }
 ?>
 
@@ -61,10 +82,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                     <i class="fas fa-book text-lg"></i>
                     <span class="font-medium">Mes Cours</span>
                 </a>
-                <!-- <a href="ajouter_cours.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
-                    <i class="fas fa-plus text-lg"></i>
-                    <span class="font-medium">Ajouter un Cours</span>
-                </a> -->
                 <a href="statistiques.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-chart-line text-lg"></i>
                     <span class="font-medium">Statistiques</span>
@@ -104,7 +121,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                         </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
                             <hr class="my-2 border-slate-100">
-                            <a href="#" class="block px-4 py-2 text-red-600 hover:bg-slate-50 transition-all duration-300">
+                            <a href="/cours_en_ligne/cours_en_ligne/includes/auth.php?action=logout" class="block px-4 py-2 text-red-600 hover:bg-slate-50 transition-all duration-300">
                                 <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
                             </a>
                         </div>
@@ -121,13 +138,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                         </div>
                         <div class="ml-6">
                             <h3 class="text-slate-500 text-sm font-medium mb-1">Étudiants Inscrits</h3>
-                            <p class="text-3xl font-bold text-slate-800">1,250</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>8%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
+                            <p class="text-3xl font-bold text-slate-800"><?php echo count($inscriptions); ?></p>
                         </div>
                     </div>
                 </div>
@@ -139,13 +150,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                         </div>
                         <div class="ml-6">
                             <h3 class="text-slate-500 text-sm font-medium mb-1">Cours Actifs</h3>
-                            <p class="text-3xl font-bold text-slate-800">42</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-arrow-up mr-1"></i>15%
-                                </span>
-                                <span class="text-slate-400 ml-2">vs last month</span>
-                            </div>
+                            <p class="text-3xl font-bold text-slate-800"><?php echo count($statistiques); ?></p>
                         </div>
                     </div>
                 </div>
@@ -158,46 +163,41 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'enseignant' || !
                         <div class="ml-6">
                             <h3 class="text-slate-500 text-sm font-medium mb-1">Catégories</h3>
                             <p class="text-3xl font-bold text-slate-800">12</p>
-                            <div class="flex items-center mt-2 text-sm">
-                                <span class="text-emerald-500">
-                                    <i class="fas fa-plus mr-1"></i>2 new
-                                </span>
-                                <span class="text-slate-400 ml-2">this week</span>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Liste des Étudiants Inscrits -->
-            <div class="bg-white rounded-2xl shadow-sm">
-                <div class="p-8 border-b border-slate-100">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800">Étudiants Inscrits</h2>
-                    </div>
-                </div>
-                <div class="overflow-x-auto p-4">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left">
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nom</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Cours</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Date d'Inscription</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition-all duration-300">
-                                <td class="px-6 py-4">John Doe</td>
-                                <td class="px-6 py-4">john@example.com</td>
-                                <td class="px-6 py-4">Introduction à la Programmation</td>
-                                <td class="px-6 py-4">2023-10-25</td>
-                            </tr>
-                            <!-- Plus de lignes... -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="bg-white rounded-2xl shadow-sm">
+    <div class="p-8 border-b border-slate-100">
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-slate-800">Étudiants Inscrits</h2>
+        </div>
+    </div>
+    <div class="overflow-x-auto p-4">
+        <table class="w-full">
+            <thead>
+                <tr class="text-left">
+                    <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nom</th>
+                    <th class="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
+                    <th class="px-6 py-4 text-sm font-semibold text-slate-600">Date d'Inscription</th>
+                    <th class="px-6 py-4 text-sm font-semibold text-slate-600">Cours</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                <?php foreach ($inscriptions as $inscription): ?>
+                    <tr class="hover:bg-slate-50 transition-all duration-300">
+                        <td class="px-6 py-4"><?php echo htmlspecialchars($inscription['nom'] . ' ' . $inscription['prenom']); ?></td>
+                        <td class="px-6 py-4"><?php echo htmlspecialchars($inscription['email']); ?></td>
+                        <td class="px-6 py-4"><?php echo htmlspecialchars($inscription['inscrit_a']); ?></td>
+                        <td class="px-6 py-4"><?php echo htmlspecialchars($inscription['cours_titre']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
         </main>
     </div>
 </body>

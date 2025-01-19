@@ -84,7 +84,7 @@ $tags = Tag::getAllTags();
                 </a>
                 <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
                     <i class="fas fa-cog text-lg"></i>
-                    <span class="font-medium">Settings</span>
+                    <span class="font-medium">Paramètres</span>
                 </a>
             </nav>
         </aside>
@@ -117,8 +117,8 @@ $tags = Tag::getAllTags();
                         </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
                             <hr class="my-2 border-slate-100">
-                            <a href="#" class="block px-4 py-2 text-red-600 hover:bg-slate-50 transition-all duration-300">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            <a href="/cours_en_ligne/cours_en_ligne/includes/auth.php?action=logout" class="block px-4 py-2 text-red-600 hover:bg-slate-50 transition-all duration-300">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
                             </a>
                         </div>
                     </div>
