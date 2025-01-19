@@ -3,6 +3,7 @@ session_start();
 require_once '../classes/Database.php';
 require_once '../classes/Utilisateur.php';
 require_once '../classes/Administrateur.php';
+require_once '../classes/Etudiant.php';
 
 $action = $_GET['action'] ?? '';
 
@@ -71,15 +72,20 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
       // Convertir le rôle en ID
       $role_id = $role === 'etudiant' ? 1 : ($role === 'enseignant' ? 2 : 3);
 
-      // Si l'utilisateur est un enseignant, il n'est pas validé par défaut
-      $est_valide = ($role === 'enseignant') ? false : true;
+      // Si l'utilisateur est un étudiant, il est validé par défaut
+      $est_valide = ($role === 'etudiant') ? true : false;
 
       // Hacher le mot de passe
       $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-      // Créer un nouvel utilisateur
-      $user = new Utilisateur($id,$nom, $prenom, $email, $passwordHash, $role_id, 'active', $est_valide);
-    
+      // Créer un nouvel utilisateur ou étudiant selon le rôle
+      if ($role === 'etudiant') {
+          $user = new Etudiant(null, $nom, $prenom, $email, $passwordHash, 'active', $est_valide);
+      } else {
+          $user = new Utilisateur(null, $nom, $prenom, $email, $passwordHash, $role_id, 'active', $est_valide);
+      }
+
+      // Enregistrer l'utilisateur dans la base de données
       $user->save();
 
       // Message de succès selon le rôle

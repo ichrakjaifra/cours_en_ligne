@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../../classes/Cours.php';
 require_once '../../classes/Categorie.php';
 require_once '../../classes/Tag.php';
@@ -112,7 +111,7 @@ $currentPage = $result['currentPage'];
                                     <span class="text-lg font-bold text-blue-500">Gratuit</span>
                                 </div>
                                 <!-- Bouton pour voir le cours -->
-                                <a href="cours_detail.php?id=<?php echo $c->getIdCourse(); ?>" class="mt-4 block w-full text-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                                <a href="#" class="mt-4 block w-full text-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
                                     Voir le cours
                                 </a>
                             </div>

@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Récupérer tous les cours pour affichage
 $enseignant_id = $_SESSION['user']['id'];
-$cours = Cours::getAllCours($enseignant_id);
+$cours = Cours::getAllCour($enseignant_id);
 ?>
 
 <!DOCTYPE html>

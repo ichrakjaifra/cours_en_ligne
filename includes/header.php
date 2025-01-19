@@ -24,7 +24,7 @@
             <!-- Liens de connexion/déconnexion (à droite) -->
             <div class="flex space-x-4">
                 <?php if (isset($_SESSION['user'])): ?>
-                    <a href="/cours_en_ligne/cours_en_ligne/pages/<?= $_SESSION['user']['role'] ?>/dashboard.php" class="hover:text-gray-200">Tableau de bord</a>
+                    <a href="/cours_en_ligne/cours_en_ligne/pages/<?= $_SESSION['user']['role'] ?>/dashboard2.php" class="hover:text-gray-200">Tableau de bord</a>
                     <a href="/cours_en_ligne/cours_en_ligne/includes/auth.php?action=logout" class="hover:text-gray-200">Déconnexion</a>
                 <?php else: ?>
                     <a href="/cours_en_ligne/cours_en_ligne/auth/login.php" class="hover:text-gray-200">Connexion</a>

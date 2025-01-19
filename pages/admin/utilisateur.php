@@ -5,14 +5,18 @@ require_once '../../classes/Utilisateur.php';
 require_once '../../classes/Administrateur.php';
 
 // Vérifier si l'utilisateur est un administrateur
-// if (!isset($_SESSION['user']) || !$_SESSION['user']->isAdmin()) {
-//     header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
-//     exit();
-// }
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
+    exit();
+}
 
-// Récupérer tous les utilisateurs
+// Récupérer tous les utilisateurs avec leurs rôles
 $db = Database::getInstance()->getConnection();
-$stmt = $db->query("SELECT * FROM utilisateurs");
+$stmt = $db->query("
+    SELECT u.*, r.nom AS role_nom 
+    FROM utilisateurs u 
+    JOIN roles r ON u.role_id = r.id_role
+");
 $utilisateurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Traitement des actions (valider, activer, suspendre, supprimer)
@@ -210,7 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <!-- Tableau des utilisateurs -->
-            <!-- Tableau des utilisateurs -->
             <div class="bg-white rounded-2xl shadow-sm">
                 <div class="overflow-x-auto p-4">
                     <table class="w-full">
@@ -234,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?= htmlspecialchars($utilisateur['email']) ?>
                                     </td>
                                     <td class="px-6 py-4 text-slate-600">
-                                        <?= $utilisateur['role_id'] == 1 ? 'Étudiant' : ($utilisateur['role_id'] == 2 ? 'Enseignant' : 'Admin') ?>
+                                        <?= htmlspecialchars($utilisateur['role_nom']) ?>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="status-badge <?= $utilisateur['statut'] == 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' ?>">
@@ -242,14 +245,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="status-badge <?= $utilisateur['est_valide'] ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' ?>">
-                                            <?= $utilisateur['est_valide'] ? 'Oui' : 'Non' ?>
+                                        <span class="status-badge <?= ($utilisateur['role_nom'] === 'etudiant' || $utilisateur['est_valide']) ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' ?>">
+                                            <?= ($utilisateur['role_nom'] === 'etudiant' || $utilisateur['est_valide']) ? 'Oui' : 'Non' ?>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
                                         <form method="POST" class="flex space-x-3">
                                             <input type="hidden" name="utilisateur_id" value="<?= $utilisateur['id_utilisateur'] ?>">
-                                            <?php if ($utilisateur['role_id'] == 2 && !$utilisateur['est_valide']) : ?>
+                                            <?php if ($utilisateur['role_nom'] === 'enseignant' && !$utilisateur['est_valide']) : ?>
                                                 <button type="submit" name="action" value="valider" class="text-green-500 hover:text-green-700" title="Valider">
                                                     <i class="fas fa-check"></i>
                                                 </button>

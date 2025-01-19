@@ -131,7 +131,7 @@ $currentPage = $result['currentPage'];
                                 <!-- Instructeur et prix -->
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
-                                        <img src="/api/placeholder/32/32" alt="Instructeur" class="w-8 h-8 rounded-full">
+                                        <img src="../../images/Capture d'écran 2025-01-19 002041.png" alt="Instructeur" class="w-8 h-8 rounded-full">
                                         <span class="text-sm text-gray-600">Enseignant</span>
                                     </div>
                                     <span class="text-lg font-bold text-blue-500">Gratuit</span>
