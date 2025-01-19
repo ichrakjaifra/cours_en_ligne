@@ -1,14 +1,20 @@
 <?php
 session_start();
 require_once '../../classes/Database.php';
-require_once '../../classes/Categorie.php';
+require_once '../../classes/Enseignant.php';
 
-// Récupérer toutes les catégories
+// Vérifier si l'utilisateur est connecté et est un administrateur ou un étudiant
+if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] !== 'admin' && $_SESSION['user']['role'] !== 'etudiant')) {
+    header("Location: /cours_en_ligne/cours_en_ligne/auth/login.php");
+    exit();
+}
+
+// Récupérer tous les enseignants
 try {
-    $categories = Categorie::getAllCategorie();
+    $enseignants = Enseignant::getAllEnseignants();
 } catch (Exception $e) {
     $_SESSION['error'] = $e->getMessage();
-    $categories = [];
+    $enseignants = [];
 }
 ?>
 
@@ -17,7 +23,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youdemy - Plateforme de cours en ligne</title>
+    <title>Liste des Enseignants - Youdemy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
@@ -52,18 +58,30 @@ try {
     <!-- Contenu principal -->
     <main class="bg-gray-100 min-h-screen py-12">
         <div class="container mx-auto px-4">
-            <h1 class="text-3xl font-bold mb-8">Catégories de cours</h1>
+            <h1 class="text-3xl font-bold mb-8">Liste des Enseignants</h1>
 
-            <!-- Affichage des catégories -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <?php if (empty($categories)) : ?>
-                    <p class="text-gray-600">Aucune catégorie disponible pour le moment.</p>
+            <!-- Affichage des enseignants -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <?php if (empty($enseignants)) : ?>
+                    <p class="text-gray-600">Aucun enseignant disponible pour le moment.</p>
                 <?php else : ?>
-                    <?php foreach ($categories as $categorie) : ?>
+                    <?php foreach ($enseignants as $enseignant) : ?>
                         <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                            <h2 class="text-xl font-bold mb-2"><?php echo htmlspecialchars($categorie->getNom()); ?></h2>
-                            <p class="text-gray-600 mb-4">Explorez les cours dans cette catégorie.</p>
-                            <a href="/cours_en_ligne/cours_en_ligne/pages/etudiant/dashboard2.php" class="text-blue-500 hover:underline">Voir les cours</a>
+                            <h2 class="text-xl font-bold mb-2">
+                                <?php echo htmlspecialchars($enseignant->getNom() . ' ' . $enseignant->getPrenom()); ?>
+                            </h2>
+                            <p class="text-gray-600 mb-4">
+                                <i class="fas fa-envelope mr-2"></i>
+                                <?php echo htmlspecialchars($enseignant->getEmail()); ?>
+                            </p>
+                            <p class="text-gray-600 mb-4">
+                                <i class="fas fa-user-check mr-2"></i>
+                                Statut : <?php echo htmlspecialchars($enseignant->getStatut()); ?>
+                            </p>
+                            <p class="text-gray-600 mb-4">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Validé : <?php echo $enseignant->estValide() ? 'Oui' : 'Non'; ?>
+                            </p>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>

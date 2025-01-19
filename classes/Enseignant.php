@@ -52,5 +52,34 @@ class Enseignant extends Utilisateur {
     public function register() {
         $this->save(); // Utilise la méthode save() de la classe parente Utilisateur
     }
+
+    public static function getAllEnseignants() {
+      $db = Database::getInstance()->getConnection();
+      try {
+          // Récupérer tous les utilisateurs avec le rôle enseignant (role_id = 2)
+          $stmt = $db->prepare("
+              SELECT u.* 
+              FROM utilisateurs u 
+              WHERE u.role_id = 2
+          ");
+          $stmt->execute();
+          $enseignants = [];
+          while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+              $enseignants[] = new Enseignant(
+                  $row['id_utilisateur'],
+                  $row['nom'],
+                  $row['prenom'],
+                  $row['email'],
+                  $row['password'],
+                  $row['statut'],
+                  $row['est_valide']
+              );
+          }
+          return $enseignants;
+      } catch (PDOException $e) {
+          error_log("Erreur lors de la récupération des enseignants : " . $e->getMessage());
+          throw new Exception("Erreur lors de la récupération des enseignants.");
+      }
+  }
 }
 ?>
