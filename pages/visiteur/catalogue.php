@@ -8,7 +8,7 @@ $categories = Categorie::getAllCategorie();
 
 // Récupérer tous les cours (ou filtrer par catégorie si une catégorie est sélectionnée)
 $selected_category = isset($_GET['categorie']) ? $_GET['categorie'] : null;
-$cours = Cours::getAllCours(); // Récupérer tous les cours
+$cours = Cours::getAllCours(); 
 
 // Si une catégorie est sélectionnée, filtrer les cours
 if ($selected_category) {

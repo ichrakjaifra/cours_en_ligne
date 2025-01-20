@@ -22,7 +22,7 @@ class CoursDocument extends Cours {
               ':enseignant_id' => $this->enseignant_id
           ]);
           $this->id_course = $db->lastInsertId(); // Récupérer l'ID du cours ajouté
-          return $this->id_course; // Retourner l'ID du cours
+          return $this->id_course;
       } catch (PDOException $e) {
           error_log("Erreur lors de l'ajout du cours document : " . $e->getMessage());
           throw new Exception("Erreur lors de l'ajout du cours document.");
